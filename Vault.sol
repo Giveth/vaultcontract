@@ -47,15 +47,16 @@ contract Vault is Escapable, Owned {
     uint constant absoluteMinTimeLock = 1 days;
 
     struct Payment {
+        address spender;
         uint minPayTime;
         bool cancelled;
         bool payed;
-        address destination;
+        address recipient;
         uint value;
         bytes data;
     }
 
-    Payment[] payments;
+    Payment[] public payments;
 
     address public guardian;        // The guardian has the power to stop the payments
     uint public timeLock;
@@ -98,17 +99,17 @@ contract Vault is Escapable, Owned {
 // Spender Interface
 ////////
 
-    function preparePayment(address _destination, uint _value, bytes _data, uint _minPayTime) returns(uint) {
+    function preparePayment(address _recipient, uint _value, bytes _data, uint _minPayTime) returns(uint) {
         if (!allowedSpenders[msg.sender] ) throw;
-        if (_minPayTime < now + timeLock) throw;
         uint idPayment= payments.length;
         payments.length ++;
         Payment payment = payments[idPayment];
-        payment.minPayTime = _minPayTime;
-        payment.destination = _destination;
+        payment.spender = msg.sender;
+        payment.minPayTime = _minPayTime >= timeLock ? now + _minPayTime : now + timeLock;
+        payment.recipient = _recipient;
         payment.value = _value;
         payment.data = _data;
-        PaymentPrepared(idPayment, payment.destination, payment.value, payment.data);
+        PaymentPrepared(idPayment, payment.recipient, payment.value, payment.data);
         return idPayment;
     }
 
@@ -117,16 +118,17 @@ contract Vault is Escapable, Owned {
 
         Payment payment = payments[_idPayment];
 
+        if (!allowedSpenders[payment.spender]) throw;
         if (now < payment.minPayTime) throw;
         if (payment.cancelled) throw;
         if (payment.payed) throw;
         if (this.balance < payment.value) throw;
 
         payment.payed = true;
-        if (! payment.destination.call.value(payment.value)(payment.data)) {
+        if (! payment.recipient.call.value(payment.value)(payment.data)) {
             throw;
         }
-        PaymentExecuted(_idPayment, payment.destination, payment.value, payment.data);
+        PaymentExecuted(_idPayment, payment.recipient, payment.value, payment.data);
      }
 
 /////////
@@ -143,6 +145,10 @@ contract Vault is Escapable, Owned {
 
         payment.cancelled = true;
         PaymentCancelled(_idPayment);
+    }
+
+    function numberOfPayments() constant returns (uint) {
+        return payments.length;
     }
 
 ////////
@@ -167,8 +173,8 @@ contract Vault is Escapable, Owned {
 // Events
 ////////////
 
-    event PaymentPrepared(uint idPayment, address destination, uint value, bytes data);
-    event PaymentExecuted(uint idPayment, address destination, uint value, bytes data);
+    event PaymentPrepared(uint idPayment, address recipient, uint value, bytes data);
+    event PaymentExecuted(uint idPayment, address recipient, uint value, bytes data);
     event PaymentCancelled(uint idPayment);
     event EtherReceived(address from, uint value);
     event SpenderAuthorization(address spender, bool authorized);
