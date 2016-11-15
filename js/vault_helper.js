@@ -46,6 +46,7 @@ exports.deploy = function(opts, cb) {
                 opts.escapeCaller,
                 opts.escapeDestination,
                 opts.guardian,
+                opts.absoluteMinTimeLock,
                 opts.timeLock,
                 function(err, _vault) {
                     if (err) return cb(err);

@@ -1,33 +1,5 @@
 pragma solidity ^0.4.4;
 
-contract Escapable {
-    address escapeCaller;
-    address escapeDestination;
-
-    function Escapable(address _escapeCaller, address _escapeDestination) {
-        escapeDestination = _escapeDestination;
-        escapeCaller = _escapeCaller;
-    }
-
-    modifier onlyScapeCaller { if (msg.sender != escapeCaller) throw; _; }
-
-    /// Last Resort call, to allow for a reaction if something bad happens to
-    /// the contract or if some security issue is uncovered.
-    function escapeHatch() onlyScapeCaller {
-        if (msg.sender != escapeCaller) throw;
-        uint total = this.balance;
-        if (!escapeDestination.send(total)) {
-            throw;
-        }
-        EscapeCalled(total);
-    }
-
-    function changeScapeCaller(address _newEscapeCaller) onlyScapeCaller {
-        escapeCaller = _newEscapeCaller;
-    }
-
-    event EscapeCalled(uint amount);
-}
 
 contract Owned {
     /// Allows only the owner to call a function
@@ -42,9 +14,39 @@ contract Owned {
     }
 }
 
-contract Vault is Escapable, Owned {
+contract Escapable is Owned {
+    address escapeCaller;
+    address escapeDestination;
 
-    uint constant absoluteMinTimeLock = 1 days;
+    function Escapable(address _escapeCaller, address _escapeDestination) {
+        escapeDestination = _escapeDestination;
+        escapeCaller = _escapeCaller;
+    }
+
+    modifier onlyOwnerOrScapeCaller { if ((msg.sender != escapeCaller)&&(msg.sender!=owner)) throw; _; }
+
+    /// Last Resort call, to allow for a reaction if something bad happens to
+    /// the contract or if some security issue is uncovered.
+    function escapeHatch() onlyOwnerOrScapeCaller {
+        if (msg.sender != escapeCaller) throw;
+        uint total = this.balance;
+        if (!escapeDestination.send(total)) {
+            throw;
+        }
+        EscapeCalled(total);
+    }
+
+    function changeScapeCaller(address _newEscapeCaller) onlyOwnerOrScapeCaller {
+        escapeCaller = _newEscapeCaller;
+    }
+
+    event EscapeCalled(uint amount);
+}
+
+
+
+contract Vault is Escapable {
+
 
     struct Payment {
         address spender;
@@ -59,6 +61,7 @@ contract Vault is Escapable, Owned {
     Payment[] public payments;
 
     address public guardian;        // The guardian has the power to stop the payments
+    uint public absoluteMinTimeLock;
     uint public timeLock;
     mapping (address => bool) public allowedSpenders;
 
@@ -81,10 +84,12 @@ contract Vault is Escapable, Owned {
         address _escapeCaller,
         address _escapeDestination,
         address _guardian,
+        uint _absoluteMinTimeLock,
         uint _timeLock) Escapable(_escapeCaller, _escapeDestination)
     {
         guardian = _guardian;
         timeLock = _timeLock;
+        absoluteMinTimeLock = _absoluteMinTimeLock;
     }
 
 //////
@@ -93,6 +98,10 @@ contract Vault is Escapable, Owned {
 
     function receiveEther() payable {
         EtherReceived(msg.sender, msg.value);
+    }
+
+    function () payable {
+        receiveEther();
     }
 
 ////////

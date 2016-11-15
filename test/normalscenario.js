@@ -50,6 +50,7 @@ describe('Normal Scenario Vault test', function(){
             escapeCaller: hatchCaller,
             escapeDestination: hatchReceiver,
             guardian: guardian,
+            absoluteMinTimeLock: 86400,
             timeLock: 86400*2
         }, function(err, _vault) {
             assert.ifError(err);
