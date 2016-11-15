@@ -1,5 +1,5 @@
 {
-  "name": "vault",
+  "name": "vaultcontract",
   "version": "0.0.1",
   "description": "Vault contract. Implementation of a safe timelock in solidity",
   "main": "js/vault_helper.js",
@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Giveth/vault.git"
+    "url": "https://github.com/Giveth/vaultcontract.git"
   },
   "keywords": [
     "dao",
@@ -29,9 +29,9 @@
   "author": "Jordi Baylina",
   "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/Giveth/vault/issues"
+    "url": "https://github.com/Giveth/vaultcontract/issues"
   },
-  "homepage": "https://github.com/Giveth/vault",
+  "homepage": "https://github.com/Giveth/vaultcontract",
   "dependencies": {
     "ethconnector": "0.0.13"
   }

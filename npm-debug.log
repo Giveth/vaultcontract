@@ -1,0 +1,111 @@
+0 info it worked if it ends with ok
+1 verbose cli [ '/Users/jbaylina/n/bin/iojs',
+1 verbose cli   '/Users/jbaylina/n/bin/npm',
+1 verbose cli   'publish' ]
+2 info using npm@3.7.3
+3 info using node@v5.9.0
+4 verbose publish [ '.' ]
+5 silly cache add args [ '.', null ]
+6 verbose cache add spec .
+7 silly cache add parsed spec Result {
+7 silly cache add   raw: '.',
+7 silly cache add   scope: null,
+7 silly cache add   name: null,
+7 silly cache add   rawSpec: '.',
+7 silly cache add   spec: '/Users/jbaylina/git/vault',
+7 silly cache add   type: 'directory' }
+8 verbose addLocalDirectory /Users/jbaylina/.npm/vault/0.0.1/package.tgz not in flight; packing
+9 verbose correctMkdir /Users/jbaylina/.npm correctMkdir not in flight; initializing
+10 info lifecycle vault@0.0.1~prepublish: vault@0.0.1
+11 silly lifecycle vault@0.0.1~prepublish: no script for prepublish, continuing
+12 verbose tar pack [ '/Users/jbaylina/.npm/vault/0.0.1/package.tgz',
+12 verbose tar pack   '/Users/jbaylina/git/vault' ]
+13 verbose tarball /Users/jbaylina/.npm/vault/0.0.1/package.tgz
+14 verbose folder /Users/jbaylina/git/vault
+15 verbose addLocalTarball adding from inside cache /Users/jbaylina/.npm/vault/0.0.1/package.tgz
+16 verbose correctMkdir /Users/jbaylina/.npm correctMkdir not in flight; initializing
+17 silly cache afterAdd vault@0.0.1
+18 verbose afterAdd /Users/jbaylina/.npm/vault/0.0.1/package/package.json not in flight; writing
+19 verbose correctMkdir /Users/jbaylina/.npm correctMkdir not in flight; initializing
+20 verbose afterAdd /Users/jbaylina/.npm/vault/0.0.1/package/package.json written
+21 silly publish { name: 'vault',
+21 silly publish   version: '0.0.1',
+21 silly publish   description: 'Vault contract. Implementation of a safe timelock in solidity',
+21 silly publish   main: 'js/vault_helper.js',
+21 silly publish   directories: { test: 'test' },
+21 silly publish   scripts: { test: 'mocha' },
+21 silly publish   repository: { type: 'git', url: 'https://github.com/Giveth/vault.git' },
+21 silly publish   keywords:
+21 silly publish    [ 'dao',
+21 silly publish      'solidity',
+21 silly publish      'token',
+21 silly publish      'charity',
+21 silly publish      'smart',
+21 silly publish      'contract',
+21 silly publish      'vault',
+21 silly publish      'giveth',
+21 silly publish      'ethereum',
+21 silly publish      'safe',
+21 silly publish      'timelock' ],
+21 silly publish   author: { name: 'Jordi Baylina' },
+21 silly publish   license: 'GPL-3.0',
+21 silly publish   bugs: { url: 'https://github.com/Giveth/vault/issues' },
+21 silly publish   homepage: 'https://github.com/Giveth/vault',
+21 silly publish   dependencies: { ethconnector: '0.0.13' },
+21 silly publish   readme: '# vault\n\nThis contract is designed to keep Ether inside. The output of the ether can be\ntriggered only by a closed set of accounts. And the real payment is delayed by\na configurable time. During this deley, a guardian (if defined) can cancel the\npayment.\n\nThe contract also implements a ScapeHatch mechanism to transfer all the funds to\na secure address in case of an emergency.\n\n### constructing a scapeHatch\n\nThis is the constructor for the Vault\n\n    function Vault(\n        address _escapeCaller,\n        address _escapeDestination,\n        address _guardian,\n        uint _absoluteMinTimeLock,\n        uint _timeLock)\n\n### receive Ether\n\nEther can be sended directly to the contract or by calling\n\n    receiveEther()\n\n### Managing the list of authorized accounts\n\nThe owner can add or remove accounts that can ask for payments. To do so,\nthe owner can call:\n\n    function authorizeSpender(address _spender, bool _authorize)\n\n### Preparing and executing a payment\n\nAuthorized accounts can call\n\n    function preparePayment(address _recipient, uint _value, bytes _data, uint _minPayTime) returns(uint);\n\nTo execute the payment this method must be called after the _minPayTime. Thus method\ncan be called by any body.\n\n    function executePayment(uint _idPayment)\n\nAny body can query the payments\n\n    function numberOfPayments() constant returns (uint);\n    function payment(uint _idPayment)\n\n### Cancelling a payment\n\nThe guardian can cancel any payment by calling:\n\n    function cancelPayment(uint _idPayment) onlyGuardianOrOwner\n\nOf course the guardian can be also 0x\n\nThe owner can change the guardian by calling\n\n    function changeGuardian(address _newGuardian) onlyOwner\n\n### Change congigurable timelock\n\nThe owner can change the minimum time delay to do the payments by calling:\n\n    function changeTimelock(uint _newTimeLock) onlyOwner\n\nThere is an harcoded absolute minimum time that even the owner can not change.\nTo change this absolute minimum, A new deployment of the contract would be needed\n\n### Change the owner of the contract\n\nOwner can transfer ownership of the contract by calling\n\n    function changeOwner(address _newOwner) onlyOwner\n\n### Escape hatch mechanism\n\nA escapeHatch mechanism can be configured so that `escapeCaller` can call\nthe function `escapeHatch()` and all the funds will be transfered to `escapeDestination`\n\n`escapeCaller`can be changed by the owner or the scapeCaller by calling this function:\n\n    function changeScapeCaller(address _newEscapeCaller) onlyOwnerOrScapeCaller\n\n',
+21 silly publish   readmeFilename: 'README.md',
+21 silly publish   gitHead: 'ec04c3e9f760ee84ac8861fc8c41cf239e6975fe',
+21 silly publish   _id: 'vault@0.0.1',
+21 silly publish   _shasum: 'b1c081e9d81b604a493ab44011812cdd98585181',
+21 silly publish   _from: '.' }
+22 verbose getPublishConfig undefined
+23 silly mapToRegistry name vault
+24 silly mapToRegistry using default registry
+25 silly mapToRegistry registry https://registry.npmjs.org/
+26 silly mapToRegistry uri https://registry.npmjs.org/vault
+27 verbose publish registryBase https://registry.npmjs.org/
+28 silly publish uploading /Users/jbaylina/.npm/vault/0.0.1/package.tgz
+29 verbose request uri https://registry.npmjs.org/vault
+30 verbose request sending authorization for write operation
+31 info attempt registry request try #1 at 4:58:59 PM
+32 verbose request using bearer token for auth
+33 verbose request id aa1e8a1ad5aef90e
+34 http request PUT https://registry.npmjs.org/vault
+35 http 403 https://registry.npmjs.org/vault
+36 verbose headers { 'content-type': 'application/json',
+36 verbose headers   'cache-control': 'max-age=300',
+36 verbose headers   'content-length': '99',
+36 verbose headers   'accept-ranges': 'bytes',
+36 verbose headers   date: 'Tue, 15 Nov 2016 15:59:03 GMT',
+36 verbose headers   via: '1.1 varnish',
+36 verbose headers   connection: 'keep-alive',
+36 verbose headers   'x-served-by': 'cache-cdg8725-CDG',
+36 verbose headers   'x-cache': 'MISS',
+36 verbose headers   'x-cache-hits': '0',
+36 verbose headers   'x-timer': 'S1479225542.675552,VS0,VE632',
+36 verbose headers   vary: 'Accept-Encoding' }
+37 verbose request invalidating /Users/jbaylina/.npm/registry.npmjs.org/vault on PUT
+38 error publish Failed PUT 403
+39 verbose stack Error: you do not have permission to publish "vault". Are you logged in as the correct user? : vault
+39 verbose stack     at makeError (/Users/jbaylina/n/lib/node_modules/npm/node_modules/npm-registry-client/lib/request.js:264:12)
+39 verbose stack     at CachingRegistryClient.<anonymous> (/Users/jbaylina/n/lib/node_modules/npm/node_modules/npm-registry-client/lib/request.js:252:14)
+39 verbose stack     at Request._callback (/Users/jbaylina/n/lib/node_modules/npm/node_modules/npm-registry-client/lib/request.js:172:14)
+39 verbose stack     at Request.self.callback (/Users/jbaylina/n/lib/node_modules/npm/node_modules/request/request.js:199:22)
+39 verbose stack     at emitTwo (events.js:100:13)
+39 verbose stack     at Request.emit (events.js:185:7)
+39 verbose stack     at Request.<anonymous> (/Users/jbaylina/n/lib/node_modules/npm/node_modules/request/request.js:1036:10)
+39 verbose stack     at emitOne (events.js:95:20)
+39 verbose stack     at Request.emit (events.js:182:7)
+39 verbose stack     at IncomingMessage.<anonymous> (/Users/jbaylina/n/lib/node_modules/npm/node_modules/request/request.js:963:12)
+40 verbose statusCode 403
+41 verbose pkgid vault
+42 verbose cwd /Users/jbaylina/git/vault
+43 error Darwin 16.1.0
+44 error argv "/Users/jbaylina/n/bin/iojs" "/Users/jbaylina/n/bin/npm" "publish"
+45 error node v5.9.0
+46 error npm  v3.7.3
+47 error code E403
+48 error you do not have permission to publish "vault". Are you logged in as the correct user? : vault
+49 error If you need help, you may report this error at:
+49 error     <https://github.com/npm/npm/issues>
+50 verbose exit [ 1, true ]
