@@ -49,6 +49,7 @@ contract Vault is Escapable {
 
 
     struct Payment {
+        string description;
         address spender;
         uint minPayTime;
         bool cancelled;
@@ -108,7 +109,7 @@ contract Vault is Escapable {
 // Spender Interface
 ////////
 
-    function preparePayment(address _recipient, uint _value, bytes _data, uint _minPayTime) returns(uint) {
+    function preparePayment(string description, address _recipient, uint _value, bytes _data, uint _minPayTime) returns(uint) {
         if (!allowedSpenders[msg.sender] ) throw;
         uint idPayment= payments.length;
         payments.length ++;
@@ -118,6 +119,7 @@ contract Vault is Escapable {
         payment.recipient = _recipient;
         payment.value = _value;
         payment.data = _data;
+        payment.description = description;
         PaymentPrepared(idPayment, payment.recipient, payment.value, payment.data);
         return idPayment;
     }

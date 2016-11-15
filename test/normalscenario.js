@@ -74,6 +74,7 @@ describe('Normal Scenario Vault test', function(){
     });
     it('Should not allow preparePayment', function(done) {
         vault.preparePayment(
+            "testPayment",
             recipient,
             ethConnector.web3.toWei(10),
             "",
@@ -110,6 +111,7 @@ describe('Normal Scenario Vault test', function(){
         this.timeout(20000000);
         var now;
         vault.preparePayment(
+            "testPayment",
             recipient,
             ethConnector.web3.toWei(10),
             "0x",
@@ -138,13 +140,14 @@ describe('Normal Scenario Vault test', function(){
                     function(cb) {
                         vault.payments(0, function(err, res) {
                             assert.ifError(err);
-                            assert.equal(res[0], spender);
-                            assert.equal(res[1], now + 86400*2);
-                            assert.equal(res[2], false);
+                            assert.equal(res[0], "testPayment");
+                            assert.equal(res[1], spender);
+                            assert.equal(res[2], now + 86400*2);
                             assert.equal(res[3], false);
-                            assert.equal(res[4], recipient);
-                            assert.equal(ethConnector.web3.fromWei(res[5]), 10);
-                            assert.equal(res[6], "0x");
+                            assert.equal(res[4], false);
+                            assert.equal(res[5], recipient);
+                            assert.equal(ethConnector.web3.fromWei(res[6]), 10);
+                            assert.equal(res[7], "0x");
                             cb();
                         });
                     }
@@ -172,6 +175,7 @@ describe('Normal Scenario Vault test', function(){
     });
     it('Should not allow preparePayment adter desauthorizing', function(done) {
         vault.preparePayment(
+            "testPayment",
             recipient,
             ethConnector.web3.toWei(10),
             "",
@@ -270,8 +274,8 @@ describe('Normal Scenario Vault test', function(){
             function(cb) {
                 vault.payments(0, function(err, res) {
                     assert.ifError(err);
-                    assert.equal(res[2], false);
-                    assert.equal(res[3], true);
+                    assert.equal(res[3], false);
+                    assert.equal(res[4], true);
                     cb();
                 });
             }
