@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/CharityDAO/vault.git"
+    "url": "https://github.com/Giveth/vault.git"
   },
   "keywords": [
     "dao",
@@ -20,14 +20,18 @@
     "charity",
     "smart",
     "contract",
-    "vault"
+    "vault",
+    "giveth",
+    "ethereum",
+    "safe",
+    "timelock"
   ],
   "author": "Jordi Baylina",
   "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/CharityDAO/vault/issues"
+    "url": "https://github.com/Giveth/vault/issues"
   },
-  "homepage": "https://github.com/CharityDAO/vault",
+  "homepage": "https://github.com/Giveth/vault",
   "dependencies": {
     "ethconnector": "0.0.13"
   }
