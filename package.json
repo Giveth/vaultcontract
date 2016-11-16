@@ -1,6 +1,6 @@
 {
   "name": "vaultcontract",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "description": "Vault contract. Implementation of a safe timelock in solidity",
   "main": "js/vault_helper.js",
   "directories": {
@@ -33,6 +33,6 @@
   },
   "homepage": "https://github.com/Giveth/vaultcontract",
   "dependencies": {
-    "ethconnector": "^0.0.15"
+    "ethconnector": "^0.0.17"
   }
 }
