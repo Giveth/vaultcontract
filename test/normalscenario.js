@@ -72,8 +72,8 @@ describe('Normal Scenario Vault test', function(){
             });
         });
     });
-    it('Should not allow preparePayment', function(done) {
-        vault.preparePayment(
+    it('Should not allow authorizePayment', function(done) {
+        vault.authorizePayment(
             "testPayment",
             recipient,
             ethConnector.web3.toWei(10),
@@ -107,10 +107,10 @@ describe('Normal Scenario Vault test', function(){
             }
         );
     });
-    it('Should allow preparePayment', function(done) {
+    it('Should allow authorizePayment', function(done) {
         this.timeout(20000000);
         var now;
-        vault.preparePayment(
+        vault.authorizePayment(
             "testPayment",
             recipient,
             ethConnector.web3.toWei(10),
@@ -173,8 +173,8 @@ describe('Normal Scenario Vault test', function(){
             }
         );
     });
-    it('Should not allow preparePayment adter desauthorizing', function(done) {
-        vault.preparePayment(
+    it('Should not allow authorizePayment adter desauthorizing', function(done) {
+        vault.authorizePayment(
             "testPayment",
             recipient,
             ethConnector.web3.toWei(10),

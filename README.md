@@ -36,7 +36,7 @@ the owner can call:
 
 Authorized accounts can call
 
-    function preparePayment(address _recipient, uint _value, bytes _data, uint _minPayTime) returns(uint);
+    function authorizePayment(address _recipient, uint _value, bytes _data, uint _minPayTime) returns(uint);
 
 To execute the payment this method must be called after the _minPayTime. Thus method
 can be called by any body.

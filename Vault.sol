@@ -109,7 +109,7 @@ contract Vault is Escapable {
 // Spender Interface
 ////////
 
-    function preparePayment(string description, address _recipient, uint _value, bytes _data, uint _minPayTime) returns(uint) {
+    function authorizePayment(string description, address _recipient, uint _value, bytes _data, uint _minPayTime) returns(uint) {
         if (!allowedSpenders[msg.sender] ) throw;
         uint idPayment= payments.length;
         payments.length ++;
