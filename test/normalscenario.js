@@ -13,8 +13,7 @@ var assert = require("assert"); // node.js core module
 var async = require('async');
 var _ = require('lodash');
 
-var verbose = true;
-
+var verbose = false;
 
 
 describe('Normal Scenario Vault test', function(){

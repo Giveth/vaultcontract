@@ -13,7 +13,7 @@ var assert = require("assert"); // node.js core module
 var async = require('async');
 var _ = require('lodash');
 
-var verbose = true;
+var verbose = false;
 var throwError = "Error: VM Exception while executing transaction: invalid JUMP";
 
 
@@ -34,7 +34,7 @@ describe('Vault test Escape hatch', function(){
     var recipient;
     var guest;
     var amount = ethConnector.web3.toWei(getRandom(1,10));
-    console.log(amount)
+    log("Amount: " + amount);
     before(function(done) {
 //        ethConnector.init('rpc', function(err) {
         ethConnector.init('testrpc' ,function(err) {
@@ -75,8 +75,8 @@ describe('Vault test Escape hatch', function(){
         },function (err) {
             assert.ifError(err);
             ethConnector.web3.eth.getBalance(vault.address, function(err, _balance) {
-                assert.ifError(err)
-                assert.equal(_balance, amount)
+                assert.ifError(err);
+                assert.equal(_balance, amount);
                 done();
                 });
             });
@@ -86,11 +86,11 @@ describe('Vault test Escape hatch', function(){
      it('Fail to use the escape hatch', function(done) {
         vault.escapeHatch({
             from:guest
-        },function (err) {        
+        },function (err) {
             assert(err);
             done();
            });
-        }); 
+        });
 
 
     it('Use the escape hatch', function(done) {
@@ -99,14 +99,20 @@ describe('Vault test Escape hatch', function(){
         },function (err) {
             assert.ifError(err);
             ethConnector.web3.eth.getBalance(vault.address, function(err, _balance) {
-                assert.ifError(err)
-                assert.equal(_balance, 0)
+                assert.ifError(err);
+                assert.equal(_balance, 0);
                 ethConnector.web3.eth.getBalance(hatchReceiver, function(err, _balance) {
-                    assert.ifError(err)
-                    assert.equal(_balance.minus(ethConnector.web3.toWei(100)), amount) //accounts for original account balance of 100 eth
+                    assert.ifError(err);
+                    assert.equal(_balance.minus(ethConnector.web3.toWei(100)), amount); //accounts for original account balance of 100 eth
                     done();
                     });
                 });
             });
         });
+
+    function log(S) {
+        if (verbose) {
+            console.log(S);
+        }
+    }
 });
