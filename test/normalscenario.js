@@ -48,9 +48,10 @@ describe('Normal Scenario Vault test', function(){
         vaultHelper.deploy({
             escapeCaller: hatchCaller,
             escapeDestination: hatchReceiver,
-            guardian: guardian,
             absoluteMinTimeLock: 86400,
-            timeLock: 86400*2
+            timeLock: 86400*2,
+            guardian: guardian,
+            maxGuardianDelay: 86400*21
         }, function(err, _vault) {
             assert.ifError(err);
             assert.ok(_vault.address);

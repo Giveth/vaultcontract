@@ -57,6 +57,7 @@ contract Vault is Escapable {
         address recipient;
         uint value;
         bytes data;
+        uint guardianDelay;
     }
 
     Payment[] public payments;
@@ -64,18 +65,14 @@ contract Vault is Escapable {
     address public guardian;        // The guardian has the power to stop the payments
     uint public absoluteMinTimeLock;
     uint public timeLock;
+    uint public maxGuardianDelay;
     mapping (address => bool) public allowedSpenders;
 
 ///////
 // Modifiers
 ///////
 
-    modifier onlyGuardianOrOwner {
-        if ((msg.sender != owner) &&
-            (msg.sender != guardian))
-            throw;
-        _;
-    }
+    modifier onlyGuardian { if (msg.sender != guardian) throw; _; }
 
 /////////
 // Constuctor
@@ -84,13 +81,20 @@ contract Vault is Escapable {
     function Vault(
         address _escapeCaller,
         address _escapeDestination,
-        address _guardian,
         uint _absoluteMinTimeLock,
-        uint _timeLock) Escapable(_escapeCaller, _escapeDestination)
+        uint _timeLock,
+        address _guardian,
+        uint _maxGuardianDelay) Escapable(_escapeCaller, _escapeDestination)
     {
         guardian = _guardian;
         timeLock = _timeLock;
         absoluteMinTimeLock = _absoluteMinTimeLock;
+        maxGuardianDelay = _maxGuardianDelay;
+    }
+
+
+    function numberOfPayments() constant returns (uint) {
+        return payments.length;
     }
 
 //////
@@ -146,7 +150,26 @@ contract Vault is Escapable {
 // Guardian Interface
 /////////
 
-    function cancelPayment(uint _idPayment) onlyGuardianOrOwner {
+
+    function delayPayment(uint _idPayment, uint _delay) onlyGuardian {
+        if (_idPayment >= payments.length) throw;
+
+        Payment payment = payments[_idPayment];
+
+        if ((payment.guardianDelay + _delay > maxGuardianDelay) ||
+            (payment.payed) ||
+            (payment.cancelled))
+            throw;
+
+        payment.guardianDelay += _delay;
+        payment.minPayTime += _delay;
+    }
+
+////////
+// Owner Interface
+///////
+
+    function cancelPayment(uint _idPayment) onlyOwner {
         if (_idPayment >= payments.length) throw;
 
         Payment payment = payments[_idPayment];
@@ -158,26 +181,22 @@ contract Vault is Escapable {
         PaymentCancelled(_idPayment);
     }
 
-    function numberOfPayments() constant returns (uint) {
-        return payments.length;
-    }
-
-////////
-// Owner Interface
-///////
-
     function authorizeSpender(address _spender, bool _authorize) onlyOwner {
         allowedSpenders[_spender] = _authorize;
         SpenderAuthorization(_spender, _authorize);
     }
 
-    function changeGuardian(address _newGuardian) onlyOwner {
+    function setGuardian(address _newGuardian) onlyOwner {
         guardian = _newGuardian;
     }
 
-    function changeTimelock(uint _newTimeLock) onlyOwner {
+    function setTimelock(uint _newTimeLock) onlyOwner {
         if (_newTimeLock < absoluteMinTimeLock) throw;
         timeLock = _newTimeLock;
+    }
+
+    function setMaxGuardianDelay(uint _maxGuardianDelay) onlyOwner {
+        maxGuardianDelay = _maxGuardianDelay;
     }
 
 ////////////
