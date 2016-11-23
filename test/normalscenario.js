@@ -22,7 +22,7 @@ describe('Normal Scenario Vault test', function(){
     var owner;
     var hatchCaller;
     var hatchReceiver;
-    var guardian;
+    var securityGuard;
     var spender;
     var recipient;
     var guest;
@@ -34,7 +34,7 @@ describe('Normal Scenario Vault test', function(){
             owner = ethConnector.accounts[0];
             hatchCaller = ethConnector.accounts[1];
             hatchReceiver = ethConnector.accounts[2];
-            guardian = ethConnector.accounts[3];
+            securityGuard = ethConnector.accounts[3];
             spender = ethConnector.accounts[4];
             recipient = ethConnector.accounts[5];
             guest = ethConnector.accounts[6];
@@ -50,8 +50,8 @@ describe('Normal Scenario Vault test', function(){
             escapeDestination: hatchReceiver,
             absoluteMinTimeLock: 86400,
             timeLock: 86400*2,
-            guardian: guardian,
-            maxGuardianDelay: 86400*21
+            securityGuard: securityGuard,
+            maxSecurityGuardDelay: 86400*21
         }, function(err, _vault) {
             assert.ifError(err);
             assert.ok(_vault.address);

@@ -1,6 +1,6 @@
 {
   "name": "vaultcontract",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "Vault contract. Implementation of a safe timelock in solidity",
   "main": "js/vault_helper.js",
   "directories": {

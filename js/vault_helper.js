@@ -47,8 +47,8 @@ exports.deploy = function(opts, cb) {
                 opts.escapeDestination,
                 opts.absoluteMinTimeLock,
                 opts.timeLock,
-                opts.guardian,
-                opts.maxGuardianDelay,
+                opts.securityGuard,
+                opts.maxSecurityGuardDelay,
                 function(err, _vault) {
                     if (err) return cb(err);
                     vault = _vault;

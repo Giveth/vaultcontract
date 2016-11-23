@@ -60,22 +60,22 @@ contract Vault is Escapable {
         address recipient;
         uint value;
         bytes data;
-        uint guardianDelay;
+        uint securityGuardDelay;
     }
 
     Payment[] public payments;
 
-    address public guardian;        // The guardian has the power to delay the payments
+    address public securityGuard;        // The securityGuard has the power to delay the payments
     uint public absoluteMinTimeLock;
     uint public timeLock;
-    uint public maxGuardianDelay;
+    uint public maxSecurityGuardDelay;
     mapping (address => bool) public allowedSpenders;
 
 ///////
 // Modifiers
 ///////
 
-    modifier onlyGuardian { if (msg.sender != guardian) throw; _; }
+    modifier onlySecurityGuard { if (msg.sender != securityGuard) throw; _; }
 
 /////////
 // Constuctor
@@ -86,13 +86,13 @@ contract Vault is Escapable {
         address _escapeDestination,
         uint _absoluteMinTimeLock,
         uint _timeLock,
-        address _guardian,
-        uint _maxGuardianDelay) Escapable(_escapeCaller, _escapeDestination)
+        address _securityGuard,
+        uint _maxSecurityGuardDelay) Escapable(_escapeCaller, _escapeDestination)
     {
-        guardian = _guardian;
+        securityGuard = _securityGuard;
         timeLock = _timeLock;
         absoluteMinTimeLock = _absoluteMinTimeLock;
-        maxGuardianDelay = _maxGuardianDelay;
+        maxSecurityGuardDelay = _maxSecurityGuardDelay;
     }
 
 
@@ -152,21 +152,21 @@ contract Vault is Escapable {
      }
 
 /////////
-// Guardian Interface
+// SecurityGuard Interface
 /////////
 
 
-    function delayPayment(uint _idPayment, uint _delay) onlyGuardian {
+    function delayPayment(uint _idPayment, uint _delay) onlySecurityGuard {
         if (_idPayment >= payments.length) throw;
 
         Payment payment = payments[_idPayment];
 
-        if ((payment.guardianDelay + _delay > maxGuardianDelay) ||
+        if ((payment.securityGuardDelay + _delay > maxSecurityGuardDelay) ||
             (payment.paid) ||
             (payment.cancelled))
             throw;
 
-        payment.guardianDelay += _delay;
+        payment.securityGuardDelay += _delay;
         payment.earliestPayTime += _delay;
     }
 
@@ -191,8 +191,8 @@ contract Vault is Escapable {
         SpenderAuthorization(_spender, _authorize);
     }
 
-    function setGuardian(address _newGuardian) onlyOwner {
-        guardian = _newGuardian;
+    function setSecurityGuard(address _newSecurityGuard) onlyOwner {
+        securityGuard = _newSecurityGuard;
     }
 
     function setTimelock(uint _newTimeLock) onlyOwner {
@@ -200,8 +200,8 @@ contract Vault is Escapable {
         timeLock = _newTimeLock;
     }
 
-    function setMaxGuardianDelay(uint _maxGuardianDelay) onlyOwner {
-        maxGuardianDelay = _maxGuardianDelay;
+    function setMaxSecurityGuardDelay(uint _maxSecurityGuardDelay) onlyOwner {
+        maxSecurityGuardDelay = _maxSecurityGuardDelay;
     }
 
 ////////////
