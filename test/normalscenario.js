@@ -253,7 +253,7 @@ describe('Normal Scenario Vault test', function(){
                 vault.executePayment(
                     0,
                     {
-                        from: guest,
+                        from: recipient,
                         gas: 500000
                     },
                     function(err, res) {
@@ -267,7 +267,7 @@ describe('Normal Scenario Vault test', function(){
                     assert.ifError(err);
                     afterBalance = res;
                     var increment = afterBalance.sub(beforeBalance);
-                    assert.equal(ethConnector.web3.fromWei(increment),10);
+                    assert(ethConnector.web3.fromWei(increment)>9.9,10);
                     cb();
                 });
             },
