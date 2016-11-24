@@ -59,7 +59,6 @@ contract Vault is Escapable {
         bool paid;
         address recipient;
         uint value;
-        bytes data;
         uint securityGuardDelay;
     }
 
@@ -116,7 +115,7 @@ contract Vault is Escapable {
 // Spender Interface
 ////////
 
-    function authorizePayment(string description, address _recipient, uint _value, bytes _data, uint _paymentDalay) returns(uint) {
+    function authorizePayment(string description, address _recipient, uint _value, uint _paymentDalay) returns(uint) {
         if (!allowedSpenders[msg.sender] ) throw;
         uint idPayment= payments.length;
         payments.length ++;
@@ -125,9 +124,8 @@ contract Vault is Escapable {
         payment.earliestPayTime = _paymentDalay >= timeLock ? now + _paymentDalay : now + timeLock;
         payment.recipient = _recipient;
         payment.value = _value;
-        payment.data = _data;
         payment.description = description;
-        PaymentPrepared(idPayment, payment.recipient, payment.value, payment.data);
+        PaymentAuthorized(idPayment, payment.recipient, payment.value);
         return idPayment;
     }
 
@@ -145,10 +143,10 @@ contract Vault is Escapable {
         if (this.balance < payment.value) throw;
 
         payment.paid = true;
-        if (! payment.recipient.call.value(payment.value)(payment.data)) {
+        if (! payment.recipient.send(payment.value)) {
             throw;
         }
-        PaymentExecuted(_idPayment, payment.recipient, payment.value, payment.data);
+        PaymentExecuted(_idPayment, payment.recipient, payment.value);
      }
 
 /////////
@@ -208,8 +206,8 @@ contract Vault is Escapable {
 // Events
 ////////////
 
-    event PaymentPrepared(uint idPayment, address recipient, uint value, bytes data);
-    event PaymentExecuted(uint idPayment, address recipient, uint value, bytes data);
+    event PaymentAuthorized(uint idPayment, address recipient, uint value);
+    event PaymentExecuted(uint idPayment, address recipient, uint value);
     event PaymentCancelled(uint idPayment);
     event EtherReceived(address from, uint value);
     event SpenderAuthorization(address spender, bool authorized);

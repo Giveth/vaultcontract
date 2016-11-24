@@ -114,7 +114,6 @@ describe('Normal Scenario Vault test', function(){
             "testPayment",
             recipient,
             ethConnector.web3.toWei(10),
-            "0x",
             86400*2,
             {
                 from: spender,
@@ -147,7 +146,6 @@ describe('Normal Scenario Vault test', function(){
                             assert.equal(res[4], false);
                             assert.equal(res[5], recipient);
                             assert.equal(ethConnector.web3.fromWei(res[6]), 10);
-                            assert.equal(res[7], "0x");
                             cb();
                         });
                     }
