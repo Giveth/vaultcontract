@@ -48,17 +48,24 @@ Any body can query the payments
     function numberOfPayments() constant returns (uint);
     function payment(uint _idPayment)
 
-### Cancelling a payment
+### Delaying a payment
 
-The guardian can cancel any payment by calling:
+The guardian can delay any payment by calling:
 
-    function cancelPayment(uint _idPayment) onlyGuardianOrOwner
+    function delayPayment(uint _idPayment) onlyGuardianOrOwner
+
+This should be enough to allow the owner or the scapeHatcher to take any action
+if necessary.
 
 Of course the guardian can be also 0x
 
 The owner can change the guardian by calling
 
     function changeGuardian(address _newGuardian) onlyOwner
+
+and can also cancel any payment by calling
+
+    function cancelPayment(uint _idPayment) onlyOwner
 
 ### Change congigurable timelock
 
