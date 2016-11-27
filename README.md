@@ -2,7 +2,7 @@
 
 This contract is designed to keep Ether inside. The output of the ether can be
 triggered only by a closed set of accounts. And the real payment is delayed by
-a configurable time. During this deley, a guardian (if defined) can cancel the
+a configurable time. During this deley, a security guard (if defined) can cancel the
 payment.
 
 The contract also implements a ScapeHatch mechanism to transfer all the funds to
@@ -15,9 +15,11 @@ This is the constructor for the Vault
     function Vault(
         address _escapeCaller,
         address _escapeDestination,
-        address _guardian,
         uint _absoluteMinTimeLock,
-        uint _timeLock)
+        uint _timeLock,
+        address _securityGuard,
+        uint _maxSecurityGuardDelay)
+
 
 ### receive Ether
 
@@ -50,16 +52,16 @@ Any body can query the payments
 
 ### Delaying a payment
 
-The guardian can delay any payment by calling:
+The security guard can delay any payment by calling:
 
     function delayPayment(uint _idPayment) onlyGuardianOrOwner
 
 This should be enough to allow the owner or the scapeHatcher to take any action
 if necessary.
 
-Of course the guardian can be also 0x
+Of course the security guard can be also 0x
 
-The owner can change the guardian by calling
+The owner can change the security guard by calling
 
     function changeGuardian(address _newGuardian) onlyOwner
 
