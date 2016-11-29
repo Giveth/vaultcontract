@@ -83,6 +83,7 @@ contract Vault is Escapable {
         bool paid;
         address recipient;
         uint amount;
+        bytes data;
         uint securityGuardDelay;
     }
 
@@ -173,6 +174,7 @@ contract Vault is Escapable {
         string _description,
         address _recipient,
         uint _amount,
+        bytes _data,
         uint _paymentDalay
     ) returns(uint) {
         if (!allowedSpenders[msg.sender] ) throw;
@@ -183,6 +185,7 @@ contract Vault is Escapable {
         payment.earliestPayTime = _paymentDalay >= timeLock ? now + _paymentDalay : now + timeLock;
         payment.recipient = _recipient;
         payment.amount = _amount;
+        payment.data = _data;
         payment.description = _description;
         PaymentAuthorized(idPayment, payment.recipient, payment.amount);
         return idPayment;
@@ -205,7 +208,9 @@ contract Vault is Escapable {
         if (this.balance < payment.amount) throw;
 
         payment.paid = true;
-        if (! payment.recipient.send(payment.amount)) {
+        // with a fixed gas amount, reentry is not possible (due to `payment.paid = true;` it is already impossible)
+        // the amount of gas could als be a parameter in the payment struct
+        if (!payment.recipient.call.gas(300000).value(payment.amount)(payment.data)) {
             throw;
         }
         PaymentExecuted(_idPayment, payment.recipient, payment.amount);
