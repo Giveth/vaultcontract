@@ -178,8 +178,8 @@ contract Vault is Escapable {
         uint _paymentDalay
     ) returns(uint) {
         if (!allowedSpenders[msg.sender] ) throw;
-        uint idPayment= payments.length;
-        payments.length ++;
+        uint idPayment = payments.length;
+        payments.length++;
         Payment payment = payments[idPayment];
         payment.spender = msg.sender;
         payment.earliestPayTime = _paymentDalay >= timeLock ? now + _paymentDalay : now + timeLock;
