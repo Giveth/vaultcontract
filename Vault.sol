@@ -197,7 +197,6 @@ contract Vault is Escapable {
 
         Payment payment = payments[_idPayment];
 
-        if (msg.sender != payment.recipient) throw;
         if (!allowedSpenders[payment.spender]) throw;
         if (now < payment.earliestPayTime) throw;
         if (payment.cancelled) throw;
