@@ -91,7 +91,7 @@ contract Escapable is Owned {
     /// @notice The `escapeHatch()` should only be called as a last resort if a
     ///  security issue is uncovered or something unexpected happened
     /// @param _tokenContractAddr Address of the token contract to be scaped
-    function escapeHatchToken(address _tokenContractAddr) onlyEscapeCaller {
+    function escapeHatchToken(address _tokenContractAddr) onlyEscapeCallerOrOwner {
         Token t = Token(_tokenContractAddr);
         uint total = t.balanceOf(this);
         // Send the total balance of this contract to the `escapeDestination`
