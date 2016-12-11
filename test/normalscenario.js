@@ -59,6 +59,31 @@ describe('Normal Scenario Vault test', function(){
             done();
         });
     });
+    it('Should check roles', function(done) {
+        async.series([
+            function(cb) {
+                vault.owner(function(err, res) {
+                    assert.ifError(err);
+                    assert.equal(owner, res);
+                    cb();
+                });
+            },
+            function(cb) {
+                vault.escapeCaller(function(err, res) {
+                    assert.ifError(err);
+                    assert.equal(hatchCaller, res);
+                    cb();
+                });
+            },
+            function(cb) {
+                vault.escapeDestination(function(err, res) {
+                    assert.ifError(err);
+                    assert.equal(hatchReceiver, res);
+                    cb();
+                });
+            }
+        ], done);
+    });
     it('Should send some Ether to the Vault', function(done) {
         vault.receiveEther({
             from: ethConnector.accounts[0],
