@@ -26,6 +26,9 @@ pragma solidity ^0.4.4;
 ///  be a safe place to store funds equipped with optional variable time delays
 ///  to allow for an optional escape hatch
 
+
+import "Token.sol";
+
 /// @dev `Owned` is a base level contract that assigns an `owner` that can be
 ///  later changed
 contract Owned {
@@ -83,6 +86,7 @@ contract Escapable is Owned {
         }
         EscapeCalled(total);
     }
+
     /// @notice Changes the address assigned to call `escapeHatch()`
     /// @param _newEscapeCaller The address of a trusted account or contract to
     ///  call `escapeHatch()` to send the ether in this contract to the
