@@ -123,7 +123,7 @@ describe('Normal Scenario Vault test', function(){
                 assert.ifError(err);
                 async.series([
                     function(cb) {
-                        vault.numberOfPayments(function(err, res) {
+                        vault.numberOfAuthorizedPayments(function(err, res) {
                             assert.ifError(err);
                             assert.equal(res, 1);
                             cb();
@@ -137,7 +137,7 @@ describe('Normal Scenario Vault test', function(){
                         });
                     },
                     function(cb) {
-                        vault.payments(0, function(err, res) {
+                        vault.authorizedPayments(0, function(err, res) {
                             assert.ifError(err);
                             assert.equal(res[0], "testPayment");
                             assert.equal(res[1], spender);
@@ -270,7 +270,7 @@ describe('Normal Scenario Vault test', function(){
                 });
             },
             function(cb) {
-                vault.payments(0, function(err, res) {
+                vault.authorizedPayments(0, function(err, res) {
                     assert.ifError(err);
                     assert.equal(res[3], false);
                     assert.equal(res[4], true);

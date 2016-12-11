@@ -20,7 +20,7 @@ pragma solidity ^0.4.4;
 
 /// @title Vault Contract
 /// @author Jordi Baylina
-/// @notice This contract holds funds for Campaigns and automates payments. For 
+/// @notice This contract holds funds for Campaigns and automates payments. For
 ///  this iteration the funds will come straight from the Giveth Multisig as a
 ///  safety precaution, but once fully tested and optimized this contract will
 ///  be a safe place to store funds equipped with optional variable time delays
@@ -53,8 +53,8 @@ contract Escapable is Owned {
     address escapeCaller;
     address escapeDestination;
 
-    /// @notice The Constructor assigns the `escapeDestination` and the 
-    ///  `escapeCaller` 
+    /// @notice The Constructor assigns the `escapeDestination` and the
+    ///  `escapeCaller`
     /// @param _escapeDestination The address of a safe location (usu a
     ///  Multisig) to send the ether held in this contract
     /// @param _escapeCaller The address of a trusted account or contract to
@@ -73,7 +73,7 @@ contract Escapable is Owned {
     }
 
     /// @notice The `escapeHatch()` should only be called as a last resort if a
-    /// security issue is uncovered or something unexpected happened 
+    /// security issue is uncovered or something unexpected happened
     function escapeHatch() onlyOwnerOrEscapeCaller {
         if (msg.sender != escapeCaller) throw;
         uint total = this.balance;
@@ -83,7 +83,7 @@ contract Escapable is Owned {
         }
         EscapeCalled(total);
     }
-    /// @notice Changes the address assigned to call `escapeHatch()` 
+    /// @notice Changes the address assigned to call `escapeHatch()`
     /// @param _newEscapeCaller The address of a trusted account or contract to
     ///  call `escapeHatch()` to send the ether in this contract to the
     ///  `escapeDestination` it would be ideal that `escapeCaller` cannot
@@ -96,26 +96,26 @@ contract Escapable is Owned {
 }
 
 /// @dev `Vault` is a higher level contract built off of the `Escapable`
-///  contract that holds funds for Campaigns and automates payments. 
+///  contract that holds funds for Campaigns and automates payments.
 contract Vault is Escapable {
 
     /// @dev `Payment` is a public structure that describes the details of
     ///  each payment making it easy to track the movement of funds
-    ///  transparently  
+    ///  transparently
     struct Payment {
         string description;     // What is the purpose of this payment
         address spender;        // Who is sending the funds
         uint earliestPayTime;   // The earliest a payment can be made (Unix Time)
-        bool cancelled;         // If True then the payment has been canceled  
-        bool paid;              // If True then the payment has been paid 
+        bool canceled;         // If True then the payment has been canceled
+        bool paid;              // If True then the payment has been paid
         address recipient;      // Who is receiving the funds
-        uint amount;            // The amount of wei sent in the payment 
-        uint securityGuardDelay;// The seconds `securityGuard` can delay payment 
+        uint amount;            // The amount of wei sent in the payment
+        uint securityGuardDelay;// The seconds `securityGuard` can delay payment
     }
 
-    Payment[] public payments;
+    Payment[] public authorizedPayments;
 
-    address public securityGuard;       
+    address public securityGuard;
     uint public absoluteMinTimeLock;
     uint public timeLock;
     uint public maxSecurityGuardDelay;
@@ -145,10 +145,10 @@ contract Vault is Escapable {
     ///  `escapeDestination` it would be ideal if `escapeCaller` cannot move
     ///  funds out of `escapeDestination`
     /// @param _escapeDestination The address of a safe location (usu a
-    ///  Multisig) to send the ether held in this contract in an emergency 
+    ///  Multisig) to send the ether held in this contract in an emergency
     /// @param _absoluteMinTimeLock The minimum number of seconds `timelock` can
     ///  be set to, if set to 0 the `owner` can remove the `timeLock` completely
-    /// @param _timeLock Initial number of seconds that payments are delayed 
+    /// @param _timeLock Initial number of seconds that payments are delayed
     ///  after they are authorized (a security precaution)
     /// @param _securityGuard Address that will be able to delay the payments
     ///  beyond the initial timelock requirements; can be set to 0x0 to remove
@@ -157,7 +157,7 @@ contract Vault is Escapable {
     ///   that `securityGuard` can delay a payment so that the owner can cancel
     ///   the payment if needed
     function Vault(
-        address _escapeCaller, 
+        address _escapeCaller,
         address _escapeDestination,
         uint _absoluteMinTimeLock,
         uint _timeLock,
@@ -171,9 +171,9 @@ contract Vault is Escapable {
     }
 
 
-    /// @notice States the total number of payments in this contract
-    function numberOfPayments() constant returns (uint) {
-        return payments.length;
+    /// @notice States the total number of authorized payments in this contract
+    function numberOfAuthorizedPayments() constant returns (uint) {
+        return authorizedPayments.length;
     }
 
 //////
@@ -200,58 +200,59 @@ contract Vault is Escapable {
     /// @param _description Brief description of the payment that is authorized
     /// @param _recipient Destination of the payment
     /// @param _amount Amount to be paid in wei
-    /// @param _paymentDalay Number of seconds the payment is to be delayed, if
+    /// @param _paymentDelay Number of seconds the payment is to be delayed, if
     ///  this value is below `timeLock` then the `timeLock` determines the delay
     function authorizePayment(
         string _description,
         address _recipient,
         uint _amount,
-        uint _paymentDalay
+        uint _paymentDelay
     ) returns(uint) {
 
         // Fail if you arent on the `allowedSpenders` white list
         if (!allowedSpenders[msg.sender] ) throw;
-        uint idPayment = payments.length;       // Unique Payment ID
-        payments.length++;
+        uint idPayment = authorizedPayments.length;       // Unique Payment ID
+        authorizedPayments.length++;
 
-        // The following lines fill out the payment struct 
-        Payment payment = payments[idPayment];  
-        payment.spender = msg.sender;
-        
+        // The following lines fill out the payment struct
+        Payment p = authorizedPayments[idPayment];
+        p.spender = msg.sender;
+
         // Determines the earliest the recipient can receive payment (Unix time)
-        // TODO: MAKE THIS LINE 80 CHAR and delete this line ;-)
-        payment.earliestPayTime = _paymentDalay >= timeLock ? now + _paymentDalay : now + timeLock;
-        payment.recipient = _recipient;
-        payment.amount = _amount;
-        payment.description = _description;
-        PaymentAuthorized(idPayment, payment.recipient, payment.amount);
+        p.earliestPayTime = _paymentDelay >= timeLock ?
+                                now + _paymentDelay :
+                                now + timeLock;
+        p.recipient = _recipient;
+        p.amount = _amount;
+        p.description = _description;
+        PaymentAuthorized(idPayment, p.recipient, p.amount);
         return idPayment;
     }
 
-    /// @notice only `allowedSpenders[]` The recipient of a payment calls this 
+    /// @notice only `allowedSpenders[]` The recipient of a payment calls this
     ///  function to send themselves the ether after the `earliestPayTime` has
     ///  expired
     /// @param _idPayment The payment ID to be executed
     function executePayment(uint _idPayment) {
 
         // Check that the `_idPayment` has been added to the payments struct
-        if (_idPayment >= payments.length) throw;
+        if (_idPayment >= authorizedPayments.length) throw;
 
-        Payment payment = payments[_idPayment];
+        Payment p = authorizedPayments[_idPayment];
 
         // Checking for reasons not to execute the payment
-        if (msg.sender != payment.recipient) throw;
-        if (!allowedSpenders[payment.spender]) throw;
-        if (now < payment.earliestPayTime) throw;
-        if (payment.cancelled) throw;
-        if (payment.paid) throw;
-        if (this.balance < payment.amount) throw;
+        if (msg.sender != p.recipient) throw;
+        if (!allowedSpenders[p.spender]) throw;
+        if (now < p.earliestPayTime) throw;
+        if (p.canceled) throw;
+        if (p.paid) throw;
+        if (this.balance < p.amount) throw;
 
-        payment.paid = true; // Set the payment to being paid 
-        if (!payment.recipient.send(payment.amount)) {  // Make the payment
+        p.paid = true; // Set the payment to being paid
+        if (!p.recipient.send(p.amount)) {  // Make the payment
             throw;
         }
-        PaymentExecuted(_idPayment, payment.recipient, payment.amount);
+        PaymentExecuted(_idPayment, p.recipient, p.amount);
      }
 
 /////////
@@ -262,47 +263,47 @@ contract Vault is Escapable {
     /// @param _idPayment ID of the payment to be delayed
     /// @param _delay The number of seconds to delay the payment
     function delayPayment(uint _idPayment, uint _delay) onlySecurityGuard {
-        if (_idPayment >= payments.length) throw;
+        if (_idPayment >= authorizedPayments.length) throw;
 
-        Payment payment = payments[_idPayment];
+        Payment p = authorizedPayments[_idPayment];
 
-        if ((payment.securityGuardDelay + _delay > maxSecurityGuardDelay) ||
-            (payment.paid) ||
-            (payment.cancelled))
+        if ((p.securityGuardDelay + _delay > maxSecurityGuardDelay) ||
+            (p.paid) ||
+            (p.canceled))
             throw;
 
-        payment.securityGuardDelay += _delay;
-        payment.earliestPayTime += _delay;
+        p.securityGuardDelay += _delay;
+        p.earliestPayTime += _delay;
     }
 
 ////////
 // Owner Interface
 ///////
 
-    /// @notice `onlyOwner` Cancel a payment all together 
+    /// @notice `onlyOwner` Cancel a payment all together
     /// @param _idPayment ID of the payment to be canceled.
     function cancelPayment(uint _idPayment) onlyOwner {
-        if (_idPayment >= payments.length) throw;
+        if (_idPayment >= authorizedPayments.length) throw;
 
-        Payment payment = payments[_idPayment];
+        Payment p = authorizedPayments[_idPayment];
 
 
-        if (payment.cancelled) throw;
-        if (payment.paid) throw;
+        if (p.canceled) throw;
+        if (p.paid) throw;
 
-        payment.cancelled = true;
+        p.canceled = true;
         PaymentCancelled(_idPayment);
     }
 
     /// @notice `onlyOwner` Adds a spender to the `allowedSpenders[]` white list
     /// @param _spender The address of the contract being authorized/unauthorized
-    /// @param _authorize `true` if authorizing and `false` if unauthorizing 
+    /// @param _authorize `true` if authorizing and `false` if unauthorizing
     function authorizeSpender(address _spender, bool _authorize) onlyOwner {
         allowedSpenders[_spender] = _authorize;
         SpenderAuthorization(_spender, _authorize);
     }
 
-    /// @notice `onlyOwner` Sets the address of `securityGuard` 
+    /// @notice `onlyOwner` Sets the address of `securityGuard`
     /// @param _newSecurityGuard Address of the new security guard
     function setSecurityGuard(address _newSecurityGuard) onlyOwner {
         securityGuard = _newSecurityGuard;
@@ -318,7 +319,7 @@ contract Vault is Escapable {
         timeLock = _newTimeLock;
     }
 
-    /// @notice `onlyOwner` Changes the maximum number of seconds 
+    /// @notice `onlyOwner` Changes the maximum number of seconds
     /// `securityGuard` can delay a payment
     /// @param _maxSecurityGuardDelay The new maximum delay in seconds that
     ///  `securityGuard` can delay the payment's execution in total
