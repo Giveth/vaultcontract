@@ -85,7 +85,20 @@ contract Escapable {
         if (!escapeDestination.send(total)) {
             throw;
         }
-        EscapeCalled(total);
+        EscapeCalled(0, total);
+    }
+
+    /// @notice The `escapeHatch()` should only be called as a last resort if a
+    ///  security issue is uncovered or something unexpected happened
+    /// @param _tokenContractAddr Address of the token contract to be scaped
+    function escapeHatchToken(address _tokenContractAddr) onlyEscapeCaller {
+        Token t = Token(_tokenContractAddr);
+        uint total = t.balanceOf(this);
+        // Send the total balance of this contract to the `escapeDestination`
+        if (!t.transfer(escapeDestination, total)) {
+            throw;
+        }
+        EscapeCalled(_tokenContractAddr, total);
     }
 
     /// @notice Changes the address assigned to call `escapeHatch()`
@@ -97,7 +110,7 @@ contract Escapable {
         escapeCaller = _newEscapeCaller;
     }
 
-    event EscapeCalled(uint amount);
+    event EscapeCalled(address indexed token, uint amount);
 }
 
 /// @dev `Vault` is a higher level contract built off of the `Escapable`
@@ -111,11 +124,12 @@ contract Vault is Escapable, Owned {
         string description;     // What is the purpose of this payment
         address spender;        // Who is sending the funds
         uint earliestPayTime;   // The earliest a payment can be made (Unix Time)
-        bool canceled;         // If True then the payment has been canceled
+        bool canceled;          // If True then the payment has been canceled
         bool paid;              // If True then the payment has been paid
         address recipient;      // Who is receiving the funds
         uint amount;            // The amount of wei sent in the payment
         uint securityGuardDelay;// The seconds `securityGuard` can delay payment
+        address tokenContractAddr; // Address of the token contract to be  paid
     }
 
     Payment[] public authorizedPayments;
@@ -134,8 +148,8 @@ contract Vault is Escapable, Owned {
     modifier onlySecurityGuard { if (msg.sender != securityGuard) throw; _; }
 
     // @dev Events to make the payment movements easy to find on the blockchain
-    event PaymentAuthorized(uint idPayment, address recipient, uint amount);
-    event PaymentExecuted(uint idPayment, address recipient, uint amount);
+    event PaymentAuthorized(uint idPayment, address recipient, address token, uint amount);
+    event PaymentExecuted(uint idPayment, address recipient, address token, uint amount);
     event PaymentCancelled(uint idPayment);
     event EtherReceived(address from, uint amount);
     event SpenderAuthorization(address spender, bool authorized);
@@ -204,12 +218,14 @@ contract Vault is Escapable, Owned {
     /// @notice only `allowedSpenders[]` Creates a new `Payment`
     /// @param _description Brief description of the payment that is authorized
     /// @param _recipient Destination of the payment
+    /// @param _tokenContractAddr Address of the token contract to be paid
     /// @param _amount Amount to be paid in wei
     /// @param _paymentDelay Number of seconds the payment is to be delayed, if
     ///  this value is below `timeLock` then the `timeLock` determines the delay
-    function authorizePayment(
+    function authorizeTokenPayment(
         string _description,
         address _recipient,
+        address _tokenContractAddr,
         uint _amount,
         uint _paymentDelay
     ) returns(uint) {
@@ -230,9 +246,31 @@ contract Vault is Escapable, Owned {
         p.recipient = _recipient;
         p.amount = _amount;
         p.description = _description;
-        PaymentAuthorized(idPayment, p.recipient, p.amount);
+        p.tokenContractAddr = _tokenContractAddr;
+        PaymentAuthorized(idPayment, p.recipient, p.tokenContractAddr, p.amount);
         return idPayment;
     }
+
+    /// @notice only `allowedSpenders[]` Creates a new `Payment`
+    /// @param _description Brief description of the payment that is authorized
+    /// @param _recipient Destination of the payment
+    /// @param _amount Amount to be paid in wei
+    /// @param _paymentDelay Number of seconds the payment is to be delayed, if
+    ///  this value is below `timeLock` then the `timeLock` determines the delay
+    function authorizePayment(
+        string _description,
+        address _recipient,
+        uint _amount,
+        uint _paymentDelay
+    ) returns(uint) {
+        return authorizeTokenPayment(
+            _description,
+            _recipient,
+            0,
+            _amount,
+            _paymentDelay);
+    }
+
 
     /// @notice only `allowedSpenders[]` The recipient of a payment calls this
     ///  function to send themselves the ether after the `earliestPayTime` has
@@ -254,10 +292,19 @@ contract Vault is Escapable, Owned {
         if (this.balance < p.amount) throw;
 
         p.paid = true; // Set the payment to being paid
-        if (!p.recipient.send(p.amount)) {  // Make the payment
-            throw;
+
+        if (p.tokenContractAddr == 0) {
+            if (!p.recipient.send(p.amount)) {  // Make the payment
+                throw;
+            }
+        } else {
+            Token t = Token(p.tokenContractAddr);
+            if (!t.transfer(p.recipient, p.amount)) {
+                throw;
+            }
         }
-        PaymentExecuted(_idPayment, p.recipient, p.amount);
+
+        PaymentExecuted(_idPayment, p.recipient, p.tokenContractAddr, p.amount);
      }
 
 /////////
