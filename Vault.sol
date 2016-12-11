@@ -1,3 +1,6 @@
+pragma solidity ^0.4.4;
+
+
 /*
     Copyright 2016, Jordi Baylina
 
@@ -17,52 +20,74 @@
 
 /// @title Vault Contract
 /// @author Jordi Baylina
-/// @dev This contract inteds to be a safe place where any DAO can hold funds
-///  in a safe place with a time lock and safe hatch functionality
+/// @dev This contract holds funds for Campaigns and automates payments. For 
+///  this iteration the funds will come straight from the Giveth Multisig as a
+///  safety precaution, but once fully tested and optimized this contract will
+///  be a safe place to store funds equipped with optional variable time delays
+///  to allow for an optional escape hatch
 
-pragma solidity ^0.4.4;
-
+/// @notice `Owned` is a base level contract that assigns an `owner` that can be
+///  later changed
 contract Owned {
-    /// Allows only the owner to call a function
+    /// @notice `owner` is the only address that can call a function with this
+    /// modifier
     modifier onlyOwner { if (msg.sender != owner) throw; _; }
 
     address public owner;
 
+    /// @notice The Constructor assigns the message sender to be `owner`
     function Owned() { owner = msg.sender;}
 
-    /// @notice The Owner can change the owner.
-    /// @param _newOwner The address of the new owner. 0x0 if you want an
-    ///  unowned neutral vault.
+    /// @notice `owner` can step down and assign some other address to this role
+    /// @param _newOwner The address of the new owner. 0x0 can be used to create
+    ///  an unowned neutral vault, however that cannot be undone
     function changeOwner(address _newOwner) onlyOwner {
         owner = _newOwner;
     }
 }
-
+/// @notice `Escapable` is a base level contract built off of the `Owned`
+///  contract that creates an escape hatch function to send its ether to
+///  `escapeDestination` when called by the `escapeCaller` in the case that
+///  something unexpected happens
 contract Escapable is Owned {
     address escapeCaller;
     address escapeDestination;
 
+    /// @notice The Constructor assigns the `escapeDestination` and the 
+    ///  `escapeCaller` 
+    /// @param _escapeDestination The address of a safe location (usu a
+    ///  Multisig) to send the ether held in this contract
+    /// @param _escapeCaller The address of a trusted account or contract to
+    ///  call `escapeHatch()` to send the ether in this contract to the
+    ///  `escapeDestination` it would be ideal that `escapeCaller` cannot move
+    ///  funds out of `escapeDestination`
     function Escapable(address _escapeCaller, address _escapeDestination) {
         escapeDestination = _escapeDestination;
         escapeCaller = _escapeCaller;
     }
-
+    /// @notice The addresses preassigned the roles of `owner` or `escapeCaller`
+    ///  are the only addresses that can call a function with this modifier
     modifier onlyOwnerOrEscapeCaller {
         if ((msg.sender != escapeCaller)&&(msg.sender!=owner))
             throw; _;
     }
 
-    /// @notice Last Resort call, to allow for a reaction if something bad
-    ///  happens to the contract or if some security issue is uncovered.
+    /// @notice The `escapeHatch()` should only be called as a last resort if a
+    /// security issue is uncovered or something unexpected happened 
     function escapeHatch() onlyOwnerOrEscapeCaller {
         if (msg.sender != escapeCaller) throw;
         uint total = this.balance;
+        // Send the total balance of this contract to the `escapeDestination`
         if (!escapeDestination.send(total)) {
             throw;
         }
         EscapeCalled(total);
     }
-
+    /// @notice Changes the address assigned to call `escapeHatch()` 
+    /// @param _newEscapeCaller The address of a trusted account or contract to
+    ///  call `escapeHatch()` to send the ether in this contract to the
+    ///  `escapeDestination` it would be ideal that `escapeCaller` cannot
+    ///  move funds out of `escapeDestination`
     function changeEscapeCaller(address _newEscapeCaller) onlyOwnerOrEscapeCaller {
         escapeCaller = _newEscapeCaller;
     }
@@ -70,34 +95,40 @@ contract Escapable is Owned {
     event EscapeCalled(uint amount);
 }
 
-
-
+/// @notice `Vault` is a higher level contract built off of the `Escapable`
+///  contract that holds funds for Campaigns and automates payments. 
 contract Vault is Escapable {
 
-
+    /// @notice `Payment` is a public structure that describes the details of
+    ///  each payment making it easy to track the movement of funds
+    ///  transparently  
     struct Payment {
-        string description;
-        address spender;
-        uint earliestPayTime;
-        bool cancelled;
-        bool paid;
-        address recipient;
-        uint amount;
-        uint securityGuardDelay;
+        string description;     // What is the purpose of this payment
+        address spender;        // Who is sending the funds
+        uint earliestPayTime;   // The earliest a payment can be made (Unix Time)
+        bool cancelled;         // If True then the payment has been canceled  
+        bool paid;              // If True then the payment has been paid 
+        address recipient;      // Who is receiving the funds
+        uint amount;            // The amount of wei sent in the payment 
+        uint securityGuardDelay;// The seconds `securityGuard` can delay payment 
     }
 
     Payment[] public payments;
 
-    address public securityGuard;        // The securityGuard has the power to delay the payments
+    address public securityGuard;       
     uint public absoluteMinTimeLock;
     uint public timeLock;
     uint public maxSecurityGuardDelay;
+
+    /// @dev The white list of approved addresses allowed to set up && receive
+    ///  payments from this vault
     mapping (address => bool) public allowedSpenders;
 
-
+    /// @notice The address preassigned the role of `securityGuard` is  the only
+    ///  addresses that can call a function with this modifier
     modifier onlySecurityGuard { if (msg.sender != securityGuard) throw; _; }
 
-
+    // Events to make the payment movements easy to find on the blockchain
     event PaymentAuthorized(uint idPayment, address recipient, uint amount);
     event PaymentExecuted(uint idPayment, address recipient, uint amount);
     event PaymentCancelled(uint idPayment);
@@ -108,23 +139,25 @@ contract Vault is Escapable {
 // Constuctor
 /////////
 
-    /// @notice Constructor
-    /// @param _escapeCaller Who can call scapeHatch. 0x0 if you don't want to
-    ///  use this functionality.
-    /// @param _escapeDestination Where all the funds are sended when
-    ///  `escapeHatch` is called
-    /// @param _absoluteMinTimeLock Absolute minTimeLock that nether the owner
-    ///  can get low. Set to 0 if the owner can remove the timeLock.
-    /// @param _timeLock How much time the payments will be delayrd. This
-    ///  parameter can be changed by the owner in the future.
-    /// @param _securityGuard Address of the security guard that will be able to
-    ///  delay the payments. Set to 0x0 if no security guard functionality is
-    ///  desired.
-    /// @param _maxSecurityGuardDelay Max time that the security guard can delay
-    ///  a payment. In general this time should be enough for the owner to cancel
-    ///  the payment.
+    /// @notice The Constructor creates the Vault on the blockchain
+    /// @param _escapeCaller The address of a trusted account or contract to
+    ///  call `escapeHatch()` to send the ether in this contract to the
+    ///  `escapeDestination` it would be ideal if `escapeCaller` cannot move
+    ///  funds out of `escapeDestination`
+    /// @param _escapeDestination The address of a safe location (usu a
+    ///  Multisig) to send the ether held in this contract in an emergency 
+    /// @param _absoluteMinTimeLock The minimum number of seconds `timelock` can
+    ///  be set to, if set to 0 the `owner` can remove the `timeLock` completely
+    /// @param _timeLock Initial number of seconds that payments are delayed 
+    ///  after they are authorized (a security precaution)
+    /// @param _securityGuard Address that will be able to delay the payments
+    ///  beyond the initial timelock requirements; can be set to 0x0 to remove
+    ///  the `securityGuard` functionality
+    /// @param _maxSecurityGuardDelay The maximum number of seconds in total
+    ///   that `securityGuard` can delay a payment so that the owner can cancel
+    ///   the payment if needed
     function Vault(
-        address _escapeCaller,
+        address _escapeCaller, 
         address _escapeDestination,
         uint _absoluteMinTimeLock,
         uint _timeLock,
@@ -138,7 +171,7 @@ contract Vault is Escapable {
     }
 
 
-    /// @notice Returns the total numbe of payments
+    /// @notice Returns the total number of payments made from this contract
     function numberOfPayments() constant returns (uint) {
         return payments.length;
     }
@@ -147,12 +180,14 @@ contract Vault is Escapable {
 // Receive Ether
 //////
 
-    /// @notice Method to receive payments
+    /// @notice This function is called anytime ether is sent to the contract to 
+    ///  more easily track the incoming transactions
     function receiveEther() payable {
         EtherReceived(msg.sender, msg.value);
     }
 
-    /// @notice By thefaul the vault accepts payments.
+    /// @notice The fall back function is called whenever ether is sent to this
+    ///  contract
     function () payable {
         receiveEther();
     }
@@ -161,25 +196,30 @@ contract Vault is Escapable {
 // Spender Interface
 ////////
 
-    /// @notice Authorizes a new payment. Only authorized spenders can call this
-    ///  method.
+    /// @notice only `allowedSpenders[]` Creates a new `Payment`
     /// @param _description Brief description of the payment that is authorized
     /// @param _recipient Destination of the payment
-    /// @param _amount Amount to be paid in weis.
-    /// @param _paymentDalay How much delay in seconds the payment should be
-    ///  delayed. If this value is below `timeLock`, the `timeLock` seconds is
-    ///  delayed. Set to 0 if minimum delay is required.
+    /// @param _amount Amount to be paid in wei
+    /// @param _paymentDalay Number of seconds the payment is to be delayed, if
+    ///  this value is below `timeLock` then the `timeLock` determines the delay
     function authorizePayment(
         string _description,
         address _recipient,
         uint _amount,
         uint _paymentDalay
     ) returns(uint) {
+
+        // Fail if you arent on the `allowedSpenders` white list
         if (!allowedSpenders[msg.sender] ) throw;
-        uint idPayment = payments.length;
+        uint idPayment = payments.length;       // Unique Payment ID
         payments.length++;
-        Payment payment = payments[idPayment];
+
+        // The following lines fill out the payment struct 
+        Payment payment = payments[idPayment];  
         payment.spender = msg.sender;
+        
+        // Determines the earliest the recipient can receive payment (Unix time)
+        // TODO: MAKE THIS LINE 80 CHAR and delete this line ;-)
         payment.earliestPayTime = _paymentDalay >= timeLock ? now + _paymentDalay : now + timeLock;
         payment.recipient = _recipient;
         payment.amount = _amount;
@@ -188,15 +228,18 @@ contract Vault is Escapable {
         return idPayment;
     }
 
-    /// @notice The recipient of a payment will call this method to actually
-    ///  receive the ether after the timeLock.
-    /// @param _idPayment Id of the payment to be executed.
+    /// @notice only `allowedSpenders[]` The recipient of a payment calls this 
+    ///  function to send themselves the ether after the `earliestPayTime` has
+    ///  expired
+    /// @param _idPayment The payment ID to be executed
     function executePayment(uint _idPayment) {
 
+        // Check that the `_idPayment` has been added to the payments struct
         if (_idPayment >= payments.length) throw;
 
         Payment payment = payments[_idPayment];
 
+        // Checking for reasons not to execute the payment
         if (msg.sender != payment.recipient) throw;
         if (!allowedSpenders[payment.spender]) throw;
         if (now < payment.earliestPayTime) throw;
@@ -204,8 +247,8 @@ contract Vault is Escapable {
         if (payment.paid) throw;
         if (this.balance < payment.amount) throw;
 
-        payment.paid = true;
-        if (!payment.recipient.send(payment.amount)) {
+        payment.paid = true; // Set the payment to being paid 
+        if (!payment.recipient.send(payment.amount)) {  // Make the payment
             throw;
         }
         PaymentExecuted(_idPayment, payment.recipient, payment.amount);
@@ -215,9 +258,9 @@ contract Vault is Escapable {
 // SecurityGuard Interface
 /////////
 
-    /// @notice The security guard delays a payment
-    /// @param _idPayment Id of the payment to be delayed.
-    /// @param _delay How much second more the payement will be delayed.
+    /// @notice `onlySecurityGuard` Delays a payment for a set number of seconds
+    /// @param _idPayment ID of the payment to be delayed
+    /// @param _delay The number of seconds to delay the payment
     function delayPayment(uint _idPayment, uint _delay) onlySecurityGuard {
         if (_idPayment >= payments.length) throw;
 
@@ -236,12 +279,13 @@ contract Vault is Escapable {
 // Owner Interface
 ///////
 
-    /// @notice The owner cancels a pending payment.
-    /// @param _idPayment Id of the payment to be canceld.
+    /// @notice `onlyOwner` Cancel a payment all together 
+    /// @param _idPayment ID of the payment to be canceled.
     function cancelPayment(uint _idPayment) onlyOwner {
         if (_idPayment >= payments.length) throw;
 
         Payment payment = payments[_idPayment];
+
 
         if (payment.cancelled) throw;
         if (payment.paid) throw;
@@ -250,33 +294,34 @@ contract Vault is Escapable {
         PaymentCancelled(_idPayment);
     }
 
-    /// @notice The owner authorizes/desauthorized a spender.
-    /// @param _spender address of the spender to be authorized/desauthorized.
-    /// @param _authorize `true` to authorize and `false` to desauthorize.
+    /// @notice `onlyOwner` Adds a spender to the `allowedSpenders[]` white list
+    /// @param _spender The address of the contract being authorized/unauthorized
+    /// @param _authorize `true` if authorizing and `false` if unauthorizing 
     function authorizeSpender(address _spender, bool _authorize) onlyOwner {
         allowedSpenders[_spender] = _authorize;
         SpenderAuthorization(_spender, _authorize);
     }
 
-    /// @notice The owner sets a new security guard.
-    /// @param _newSecurityGuard Address of the new security guard.
+    /// @notice `onlyOwner` Sets the address of `securityGuard` 
+    /// @param _newSecurityGuard Address of the new security guard
     function setSecurityGuard(address _newSecurityGuard) onlyOwner {
         securityGuard = _newSecurityGuard;
     }
 
 
-    /// @notice The owner sets a new timeLock. This timeLock can not be lower
-    ///  than `absoluteMinTimeLock`
-    /// @param _newTimeLock New `timeLock` in seconds. The pending paymaints
-    ///  will maintain ther payment times.
+    /// @notice `onlyOwner` Changes `timeLock`; the new `timeLock` cannot be
+    ///  lower than `absoluteMinTimeLock`
+    /// @param _newTimeLock Sets the new minimum default `timeLock` in seconds;
+    ///  pending payments maintain their `earliestPayTime`
     function setTimelock(uint _newTimeLock) onlyOwner {
         if (_newTimeLock < absoluteMinTimeLock) throw;
         timeLock = _newTimeLock;
     }
 
-    /// @notice The owner sets the maximum time the security guard can delay a
-    ///  payment
-    /// @param _maxSecurityGuardDelay The new maximum delay in seconds
+    /// @notice `onlyOwner` Changes the maximum number of seconds 
+    /// `securityGuard` can delay a payment
+    /// @param _maxSecurityGuardDelay The new maximum delay in seconds that
+    ///  `securityGuard` can delay the payment's execution in total
     function setMaxSecurityGuardDelay(uint _maxSecurityGuardDelay) onlyOwner {
         maxSecurityGuardDelay = _maxSecurityGuardDelay;
     }
