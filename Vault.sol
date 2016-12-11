@@ -52,7 +52,7 @@ contract Owned {
 ///  contract that creates an escape hatch function to send its ether to
 ///  `escapeDestination` when called by the `escapeCaller` in the case that
 ///  something unexpected happens
-contract Escapable {
+contract Escapable is Owned {
     address public escapeCaller;
     address public escapeDestination;
 
@@ -71,15 +71,15 @@ contract Escapable {
 
     /// @dev The addresses preassigned the `escapeCaller` role
     ///  is the only addresses that can call a function with this modifier
-    modifier onlyEscapeCaller {
-        if (msg.sender != escapeCaller)
+    modifier onlyEscapeCallerOrOwner {
+        if ((msg.sender != escapeCaller)&&(msg.sender != owner))
             throw;
         _;
     }
 
     /// @notice The `escapeHatch()` should only be called as a last resort if a
     /// security issue is uncovered or something unexpected happened
-    function escapeHatch() onlyEscapeCaller {
+    function escapeHatch() onlyEscapeCallerOrOwner {
         uint total = this.balance;
         // Send the total balance of this contract to the `escapeDestination`
         if (!escapeDestination.send(total)) {
@@ -106,7 +106,7 @@ contract Escapable {
     ///  call `escapeHatch()` to send the ether in this contract to the
     ///  `escapeDestination` it would be ideal that `escapeCaller` cannot
     ///  move funds out of `escapeDestination`
-    function changeEscapeCaller(address _newEscapeCaller) onlyEscapeCaller {
+    function changeEscapeCaller(address _newEscapeCaller) onlyEscapeCallerOrOwner {
         escapeCaller = _newEscapeCaller;
     }
 
@@ -115,7 +115,7 @@ contract Escapable {
 
 /// @dev `Vault` is a higher level contract built off of the `Escapable`
 ///  contract that holds funds for Campaigns and automates payments.
-contract Vault is Escapable, Owned {
+contract Vault is Escapable {
 
     /// @dev `Payment` is a public structure that describes the details of
     ///  each payment making it easy to track the movement of funds
