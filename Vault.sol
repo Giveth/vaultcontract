@@ -20,16 +20,16 @@ pragma solidity ^0.4.4;
 
 /// @title Vault Contract
 /// @author Jordi Baylina
-/// @dev This contract holds funds for Campaigns and automates payments. For 
+/// @notice This contract holds funds for Campaigns and automates payments. For 
 ///  this iteration the funds will come straight from the Giveth Multisig as a
 ///  safety precaution, but once fully tested and optimized this contract will
 ///  be a safe place to store funds equipped with optional variable time delays
 ///  to allow for an optional escape hatch
 
-/// @notice `Owned` is a base level contract that assigns an `owner` that can be
+/// @dev `Owned` is a base level contract that assigns an `owner` that can be
 ///  later changed
 contract Owned {
-    /// @notice `owner` is the only address that can call a function with this
+    /// @dev `owner` is the only address that can call a function with this
     /// modifier
     modifier onlyOwner { if (msg.sender != owner) throw; _; }
 
@@ -45,7 +45,7 @@ contract Owned {
         owner = _newOwner;
     }
 }
-/// @notice `Escapable` is a base level contract built off of the `Owned`
+/// @dev `Escapable` is a base level contract built off of the `Owned`
 ///  contract that creates an escape hatch function to send its ether to
 ///  `escapeDestination` when called by the `escapeCaller` in the case that
 ///  something unexpected happens
@@ -65,7 +65,7 @@ contract Escapable is Owned {
         escapeDestination = _escapeDestination;
         escapeCaller = _escapeCaller;
     }
-    /// @notice The addresses preassigned the roles of `owner` or `escapeCaller`
+    /// @dev The addresses preassigned the roles of `owner` or `escapeCaller`
     ///  are the only addresses that can call a function with this modifier
     modifier onlyOwnerOrEscapeCaller {
         if ((msg.sender != escapeCaller)&&(msg.sender!=owner))
@@ -95,11 +95,11 @@ contract Escapable is Owned {
     event EscapeCalled(uint amount);
 }
 
-/// @notice `Vault` is a higher level contract built off of the `Escapable`
+/// @dev `Vault` is a higher level contract built off of the `Escapable`
 ///  contract that holds funds for Campaigns and automates payments. 
 contract Vault is Escapable {
 
-    /// @notice `Payment` is a public structure that describes the details of
+    /// @dev `Payment` is a public structure that describes the details of
     ///  each payment making it easy to track the movement of funds
     ///  transparently  
     struct Payment {
@@ -124,11 +124,11 @@ contract Vault is Escapable {
     ///  payments from this vault
     mapping (address => bool) public allowedSpenders;
 
-    /// @notice The address preassigned the role of `securityGuard` is  the only
+    /// @dev The address assigned the role of `securityGuard` is the only
     ///  addresses that can call a function with this modifier
     modifier onlySecurityGuard { if (msg.sender != securityGuard) throw; _; }
 
-    // Events to make the payment movements easy to find on the blockchain
+    // @dev Events to make the payment movements easy to find on the blockchain
     event PaymentAuthorized(uint idPayment, address recipient, uint amount);
     event PaymentExecuted(uint idPayment, address recipient, uint amount);
     event PaymentCancelled(uint idPayment);
@@ -171,7 +171,7 @@ contract Vault is Escapable {
     }
 
 
-    /// @notice Returns the total number of payments made from this contract
+    /// @notice States the total number of payments in this contract
     function numberOfPayments() constant returns (uint) {
         return payments.length;
     }
@@ -180,8 +180,8 @@ contract Vault is Escapable {
 // Receive Ether
 //////
 
-    /// @notice This function is called anytime ether is sent to the contract to 
-    ///  more easily track the incoming transactions
+    /// @notice Called anytime ether is sent to the contract && creates an event
+    /// to more easily track the incoming transactions
     function receiveEther() payable {
         EtherReceived(msg.sender, msg.value);
     }
