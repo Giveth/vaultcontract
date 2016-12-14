@@ -214,8 +214,8 @@ describe('Normal Scenario Vault test', function(){
         );
     });
 
-    it('Should not allow executePayment', function(done) {
-        vault.executePayment(
+    it('Should not allow collectAuthorizedPayment', function(done) {
+        vault.collectAuthorizedPayment(
             0,
             {
                 from: recipient,
@@ -230,8 +230,8 @@ describe('Normal Scenario Vault test', function(){
     it('Should delay', function(done) {
         bcDelay(86400*2+1, done);
     });
-    it('Should not allow executePayment if not authorized', function(done) {
-        vault.executePayment(
+    it('Should not allow collectAuthorizedPayment if not authorized', function(done) {
+        vault.collectAuthorizedPayment(
             0,
             {
                 from: recipient,
@@ -273,7 +273,7 @@ describe('Normal Scenario Vault test', function(){
                 });
             },
             function(cb) {
-                vault.executePayment(
+                vault.collectAuthorizedPayment(
                     0,
                     {
                         from: recipient,
@@ -305,7 +305,7 @@ describe('Normal Scenario Vault test', function(){
         ], done);
     });
     it('Should not execute payment 2 times', function(done) {
-        vault.executePayment(
+        vault.collectAuthorizedPayment(
             0,
             {
                 from: recipient,

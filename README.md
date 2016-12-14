@@ -43,7 +43,7 @@ Authorized accounts can call
 To execute the payment this method must be called after the _minPayTime. Thus method
 can be called by any body.
 
-    function executePayment(uint _idPayment)
+    function collectAuthorizedPayment(uint _idPayment)
 
 Any body can query the payments
 

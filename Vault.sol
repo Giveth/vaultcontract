@@ -234,7 +234,7 @@ contract Vault is Escapable {
     ///  function to send themselves the ether after the `earliestPayTime` has
     ///  expired
     /// @param _idPayment The payment ID to be executed
-    function executePayment(uint _idPayment) {
+    function collectAuthorizedPayment(uint _idPayment) {
 
         // Check that the `_idPayment` has been added to the payments struct
         if (_idPayment >= authorizedPayments.length) throw;
