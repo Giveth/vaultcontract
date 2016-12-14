@@ -132,7 +132,7 @@ contract Vault is Escapable {
     // @dev Events to make the payment movements easy to find on the blockchain
     event PaymentAuthorized(uint idPayment, address recipient, uint amount);
     event PaymentExecuted(uint idPayment, address recipient, uint amount);
-    event PaymentCancelled(uint idPayment);
+    event PaymentCanceled(uint idPayment);
     event EtherReceived(address from, uint amount);
     event SpenderAuthorization(address spender, bool authorized);
 
@@ -293,7 +293,7 @@ contract Vault is Escapable {
         if (p.paid) throw;
 
         p.canceled = true;
-        PaymentCancelled(_idPayment);
+        PaymentCanceled(_idPayment);
     }
 
     /// @notice `onlyOwner` Adds a spender to the `allowedSpenders[]` white list
