@@ -71,17 +71,17 @@ The vault records authorized payments on the blockchain; they can be accessed by
 
     function payment(uint _idPayment)
 
-### Delaying a Payment
+### Delaying and Canceling a Payment
 
 To allow the `owner` and the`escapeHatchCaller` time to take any action necessary in the case of a questionable payment, `securityGuard` can delay any payment by calling:
 
     function delayPayment(uint _idPayment) onlySecurityGuard
 
-The `owner` can change reassign `securityGuard` by calling
+Only `owner` can assign an address to act as `securityGuard` by calling:
 
    function setSecurityGuard(address _newSecurityGuard)
 
-and can also cancel any payment by calling
+also only `owner` can cancel payments by calling
 
     function cancelPayment(uint _idPayment) onlyOwner
 
@@ -100,7 +100,7 @@ The `owner` can reassign it’s role to another address (or remove the role of `
 
     function changeOwner(address _newOwner) onlyOwner
 
-### The Escape Hatch Mechanism
+### Escape Hatch Mechanism
 
 The Escape Hatch Mechanism is configured in the constructor so that `escapeCaller` can call
 the function `escapeHatch()` and all the ether in the vault will be transferred to `escapeDestination`
