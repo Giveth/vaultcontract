@@ -171,8 +171,12 @@ contract Vault is Escapable {
         maxSecurityGuardDelay = _maxSecurityGuardDelay;
     }
 
+/////////
+// Helper functions
+/////////
 
     /// @notice States the total number of authorized payments in this contract
+    /// @return The number of payments ever authorized even if they were canceled
     function numberOfAuthorizedPayments() constant returns (uint) {
         return authorizedPayments.length;
     }
@@ -203,6 +207,7 @@ contract Vault is Escapable {
     /// @param _amount Amount to be paid in wei
     /// @param _paymentDelay Number of seconds the payment is to be delayed, if
     ///  this value is below `timeLock` then the `timeLock` determines the delay
+    /// @return The Payment ID number for the new authorized payment
     function authorizePayment(
         string _description,
         address _recipient,
