@@ -130,11 +130,11 @@ contract Vault is Escapable {
     modifier onlySecurityGuard { if (msg.sender != securityGuard) throw; _; }
 
     // @dev Events to make the payment movements easy to find on the blockchain
-    event PaymentAuthorized(uint idPayment, address recipient, uint amount);
-    event PaymentExecuted(uint idPayment, address recipient, uint amount);
-    event PaymentCanceled(uint idPayment);
-    event EtherReceived(address from, uint amount);
-    event SpenderAuthorization(address spender, bool authorized);
+    event PaymentAuthorized(uint indexed idPayment, address indexed recipient, uint amount);
+    event PaymentExecuted(uint indexed idPayment, address indexed recipient, uint amount);
+    event PaymentCanceled(uint indexed idPayment);
+    event EtherReceived(address indexed from, uint amount);
+    event SpenderAuthorization(address indexed spender, bool authorized);
 
 /////////
 // Constuctor
