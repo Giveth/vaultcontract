@@ -62,8 +62,8 @@ contract Escapable is Owned {
     ///  `escapeDestination` it would be ideal that `escapeCaller` cannot move
     ///  funds out of `escapeDestination`
     function Escapable(address _escapeCaller, address _escapeDestination) {
-        escapeDestination = _escapeDestination;
         escapeCaller = _escapeCaller;
+        escapeDestination = _escapeDestination;
     }
 
     /// @dev The addresses preassigned the `escapeCaller` role
@@ -137,7 +137,7 @@ contract Vault is Escapable {
     event SpenderAuthorization(address indexed spender, bool authorized);
 
 /////////
-// Constuctor
+// Constructor
 /////////
 
     /// @notice The Constructor creates the Vault on the blockchain
@@ -165,14 +165,18 @@ contract Vault is Escapable {
         address _securityGuard,
         uint _maxSecurityGuardDelay) Escapable(_escapeCaller, _escapeDestination)
     {
-        securityGuard = _securityGuard;
-        timeLock = _timeLock;
         absoluteMinTimeLock = _absoluteMinTimeLock;
+        timeLock = _timeLock;
+        securityGuard = _securityGuard;
         maxSecurityGuardDelay = _maxSecurityGuardDelay;
     }
 
+/////////
+// Helper functions
+/////////
 
     /// @notice States the total number of authorized payments in this contract
+    /// @return The number of payments ever authorized even if they were canceled
     function numberOfAuthorizedPayments() constant returns (uint) {
         return authorizedPayments.length;
     }
@@ -203,6 +207,7 @@ contract Vault is Escapable {
     /// @param _amount Amount to be paid in wei
     /// @param _paymentDelay Number of seconds the payment is to be delayed, if
     ///  this value is below `timeLock` then the `timeLock` determines the delay
+    /// @return The Payment ID number for the new authorized payment
     function authorizePayment(
         string _description,
         address _recipient,
