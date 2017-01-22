@@ -1,115 +1,104 @@
-/*jslint node: true */
-/*global describe, it, before, beforeEach, after, afterEach */
-"use strict";
+import ethConnector from "ethconnector";
+import assert from "assert"; // node.js core module
+import path from "path";
 
+import { deploy } from "../js/vault";
 
-
-var vaultHelper = require('../js/vault_helper.js');
-var ethConnector = require('ethconnector');
-var BigNumber = require('bignumber.js');
-
-
-var assert = require("assert"); // node.js core module
-var async = require('async');
-var _ = require('lodash');
-
-var verbose = false;
-var throwError = "Error: VM Exception while executing transaction: invalid JUMP";
-
-
+const verbose = false;
 
 function getRandom(min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+    const range = (max - min) + 1;
+    return Math.floor(Math.random() * range) + min;
 }
 
-
-describe('Vault test Escape hatch', function(){
-    var vault;
-    var b = [];
-    var owner;
-    var hatchCaller;
-    var hatchReceiver;
-    var securityGuard;
-    var spender;
-    var recipient;
-    var guest;
-    var amount = ethConnector.web3.toWei(getRandom(1,10));
-    log("Amount: " + amount);
-    before(function(done) {
+describe("Vault test Escape hatch", () => {
+    let vault;
+    let escapeCaller;
+    let escapeDestination;
+    let securityGuard;
+    let guest;
+    const amount = ethConnector.web3.toWei(getRandom(1, 10));
+    log(`Amount:  + ${ amount }`);
+    before((done) => {
 //        ethConnector.init('rpc', function(err) {
-        ethConnector.init('testrpc' ,function(err) {
+        ethConnector.init("testrpc", (err) => {
             if (err) return done(err);
-            owner = ethConnector.accounts[0];
-            hatchCaller = ethConnector.accounts[1];
-            hatchReceiver = ethConnector.accounts[2];
-            securityGuard = ethConnector.accounts[3];
-            spender = ethConnector.accounts[4];
-            recipient = ethConnector.accounts[5];
-            guest = ethConnector.accounts[6];
+            escapeCaller = ethConnector.accounts[ 1 ];
+            escapeDestination = ethConnector.accounts[ 2 ];
+            securityGuard = ethConnector.accounts[ 3 ];
+            guest = ethConnector.accounts[ 6 ];
             done();
         });
     });
 
-    it('should deploy all the contracts ', function(done){
+    it("should compile contracts", function (done)  {
         this.timeout(30000);
-        var now = Math.floor(new Date().getTime() /1000);
+        ethConnector.compile(
+            path.join(__dirname, "../contracts/Vault.sol"),
+            path.join(__dirname, "../contracts/Vault.sol.js"),
+            done,
+        );
+    });
 
-        vaultHelper.deploy({
-            escapeCaller: hatchCaller,
-            escapeDestination: hatchReceiver,
+    it("should deploy all the contracts ", function (done) {
+        this.timeout(30000);
+
+        deploy(ethConnector.web3, {
+//            from: ethConnector.accounts[ 0 ],
+            escapeCaller,
+            escapeDestination,
             absoluteMinTimeLock: 86400,
-            timeLock: 86400*2,
-            securityGuard: securityGuard,
-            maxSecurityGuardDelay: 86400*21
-        }, function(err, _vault) {
+            timeLock: 86400 * 2,
+            securityGuard,
+            maxSecurityGuardDelay: 86400 * 21,
+        }, (err, _vault) => {
             assert.ifError(err);
-            assert.ok(_vault.address);
-            vault = _vault;
+            vault = _vault.contract;
+            assert.ok(vault.address);
             done();
         });
     });
 
-    it('fund the valut', function(done) {
+    it("fund the valut", (done) => {
         vault.receiveEther({
-            from:ethConnector.accounts[0],
-            value:amount
-        },function (err) {
+            from: ethConnector.accounts[ 0 ],
+            value: amount,
+        }, (err) => {
             assert.ifError(err);
-            ethConnector.web3.eth.getBalance(vault.address, function(err, _balance) {
-                assert.ifError(err);
+            ethConnector.web3.eth.getBalance(vault.address, (err2, _balance) => {
+                assert.ifError(err2);
                 assert.equal(_balance, amount);
                 done();
-                });
             });
         });
+    });
 
-
-     it('Fail to use the escape hatch', function(done) {
+    it("Fail to use the escape hatch", (done) => {
         vault.escapeHatch({
-            from:guest
-        },function (err) {
+            from: guest,
+        }, (err) => {
             assert(err);
             done();
-           });
         });
+    });
 
-
-    it('Use the escape hatch', function(done) {
+    it("Use the escape hatch", (done) => {
         vault.escapeHatch({
-            from:hatchCaller
-        },function (err) {
+            from: escapeCaller,
+        }, (err) => {
             assert.ifError(err);
-            ethConnector.web3.eth.getBalance(vault.address, function(err, _balance) {
-                assert.ifError(err);
-                assert.equal(_balance, 0);
-                ethConnector.web3.eth.getBalance(hatchReceiver, function(err, _balance) {
-                    assert.ifError(err);
-                    assert.equal(_balance.minus(ethConnector.web3.toWei(100)), amount); //accounts for original account balance of 100 eth
+            ethConnector.web3.eth.getBalance(vault.address, (err2, _balanceVault) => {
+                assert.ifError(err2);
+                assert.equal(_balanceVault, 0);
+                ethConnector.web3.eth.getBalance(escapeDestination, (err3, _balanceDest) => {
+                    assert.ifError(err3);
+                    // accounts for original account balance of 100 eth
+                    assert.equal(_balanceDest.minus(ethConnector.web3.toWei(100)), amount);
                     done();
-                    });
                 });
             });
         });
+    });
 
     function log(S) {
         if (verbose) {

@@ -2,12 +2,12 @@
   "name": "vaultcontract",
   "version": "0.2.6",
   "description": "Vault contract. Implementation of a safe timelock in solidity",
-  "main": "js/vault_helper.js",
+  "main": "js/vault.js",
   "directories": {
     "test": "test"
   },
   "scripts": {
-    "test": "mocha"
+    "test": "mocha --compilers js:babel-core/register"
   },
   "repository": {
     "type": "git",
@@ -33,6 +33,19 @@
   },
   "homepage": "https://github.com/Giveth/vaultcontract",
   "dependencies": {
-    "ethconnector": "^0.0.19"
+    "async": "^2.1.4",
+    "lodash": "^4.17.4"
+  },
+  "devDependencies": {
+    "ethconnector": "^0.0.22",
+    "babel-core": "^6.22.1",
+    "babel-eslint": "^7.1.1",
+    "babel-preset-es2015": "^6.22.0",
+    "bignumber": "^1.1.0",
+    "eslint": "^3.14.0",
+    "eslint-config-airbnb": "^14.0.0",
+    "eslint-plugin-import": "^2.2.0",
+    "eslint-plugin-jsx-a11y": "^3.0.2",
+    "eslint-plugin-react": "^6.9.0"
   }
 }
