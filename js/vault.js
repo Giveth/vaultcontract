@@ -2,7 +2,7 @@ import async from "async";
 import _ from "lodash";
 import { VaultAbi, VaultByteCode } from "../contracts/Vault.sol.js";
 
-export class Vault {
+export default class Vault {
 
     constructor(web3, address) {
         this.web3 = web3;
@@ -71,51 +71,54 @@ export class Vault {
             cb(null, st);
         });
     }
-}
 
-export function deploy(web3, opts, cb) {
-    let account;
-    let vault;
-    async.series([
-        (cb1) => {
-            if (opts.from) {
-                account = opts.from;
-                cb1();
-            } else {
-                web3.eth.getAccounts((err, _accounts) => {
-                    if (err) { cb(err); return; }
-                    if (_accounts.length === 0) return cb1(new Error("No account to deploy a contract"));
-                    account = _accounts[ 0 ];
+    static deploy(web3, opts, cb) {
+        let account;
+        let vault;
+        async.series([
+            (cb1) => {
+                if (opts.from) {
+                    account = opts.from;
                     cb1();
-                });
+                } else {
+                    web3.eth.getAccounts((err, _accounts) => {
+                        if (err) { cb(err); return; }
+                        if (_accounts.length === 0) return cb1(new Error("No account to deploy a contract"));
+                        account = _accounts[ 0 ];
+                        cb1();
+                    });
+                }
+            },
+            (cb2) => {
+                const contract = web3.eth.contract(VaultAbi);
+                contract.new(
+                    opts.escapeCaller,
+                    opts.escapeDestination,
+                    opts.absoluteMinTimeLock,
+                    opts.timeLock,
+                    opts.securityGuard,
+                    opts.maxSecurityGuardDelay,
+                    {
+                        from: account,
+                        data: VaultByteCode,
+                        gas: 3000000,
+                        value: opts.value || 0,
+                    },
+                    (err, _contract) => {
+                        if (err) { cb2(err); return; }
+                        if (typeof _contract.address !== "undefined") {
+                            vault = new Vault(web3, _contract.address);
+                            cb2();
+                        }
+                    });
+            },
+        ],
+        (err) => {
+            if (err) {
+                cb(err);
+                return;
             }
-        },
-        (cb2) => {
-            const contract = web3.eth.contract(VaultAbi);
-            contract.new(
-                opts.escapeCaller,
-                opts.escapeDestination,
-                opts.absoluteMinTimeLock,
-                opts.timeLock,
-                opts.securityGuard,
-                opts.maxSecurityGuardDelay,
-                {
-                    from: account,
-                    data: VaultByteCode,
-                    gas: 3000000,
-                    value: opts.value || 0,
-                },
-                (err, _contract) => {
-                    if (err) { cb2(err); return; }
-                    if (typeof _contract.address !== "undefined") {
-                        vault = new Vault(web3, _contract.address);
-                        cb2();
-                    }
-                });
-        },
-    ],
-    (err) => {
-        if (err) return cb(err);
-        cb(null, vault);
-    });
+            cb(null, vault);
+        });
+    }
 }

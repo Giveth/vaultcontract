@@ -3,7 +3,7 @@ import assert from "assert"; // node.js core module
 import async from "async";
 import path from "path";
 
-import { deploy } from "../js/vault";
+import Vault from "../js/vault";
 
 describe("Normal Scenario Vault test", () => {
     let vault;
@@ -37,7 +37,7 @@ describe("Normal Scenario Vault test", () => {
     it("should deploy all the contracts ", function(done) {
         this.timeout(20000);
 
-        deploy(ethConnector.web3, {
+        Vault.deploy(ethConnector.web3, {
             escapeCaller,
             escapeDestination,
             absoluteMinTimeLock: 86400,

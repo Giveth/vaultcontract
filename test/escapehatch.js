@@ -2,7 +2,7 @@ import ethConnector from "ethconnector";
 import assert from "assert"; // node.js core module
 import path from "path";
 
-import { deploy } from "../js/vault";
+import Vault from "../js/vault";
 
 const verbose = false;
 
@@ -43,7 +43,7 @@ describe("Vault test Escape hatch", () => {
     it("should deploy all the contracts ", function (done) {
         this.timeout(30000);
 
-        deploy(ethConnector.web3, {
+        Vault.deploy(ethConnector.web3, {
 //            from: ethConnector.accounts[ 0 ],
             escapeCaller,
             escapeDestination,
