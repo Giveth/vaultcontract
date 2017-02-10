@@ -52,7 +52,7 @@ describe("Normal Scenario Vault test", () => {
         });
     });
     it("Should check roles", (done) => {
-        vault.getStatus((err, st) => {
+        vault.getState((err, st) => {
             assert.ifError(err);
             assert.equal(owner, st.owner);
             assert.equal(escapeCaller, st.escapeCaller);
@@ -66,7 +66,7 @@ describe("Normal Scenario Vault test", () => {
             value: ethConnector.web3.toWei(50),
         }, (err) => {
             assert.ifError(err);
-            vault.getStatus((err2, st) => {
+            vault.getState((err2, st) => {
                 assert.ifError(err2);
                 assert.equal(st.balance, 50);
                 done();
@@ -129,7 +129,7 @@ describe("Normal Scenario Vault test", () => {
                 });
             },
             (cb) => {
-                vault.getStatus((err, st) => {
+                vault.getState((err, st) => {
                     assert.ifError(err);
                     assert.equal(st.payments.length, 1);
                     assert.equal(st.payments[ 0 ].description, "testPayment");
@@ -255,7 +255,7 @@ describe("Normal Scenario Vault test", () => {
                 });
             },
             (cb) => {
-                vault.getStatus((err, st) => {
+                vault.getState((err, st) => {
                     assert.ifError(err);
                     assert.equal(st.payments[ 0 ].canceled, false);
                     assert.equal(st.payments[ 0 ].paid, true);

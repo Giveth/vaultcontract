@@ -31,8 +31,8 @@ var Vault = function () {
     }
 
     _createClass(Vault, [{
-        key: "getStatus",
-        value: function getStatus(cb) {
+        key: "getState",
+        value: function getState(cb) {
             var _this = this;
 
             var st = {};

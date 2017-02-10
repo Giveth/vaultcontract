@@ -10,7 +10,7 @@ export default class Vault {
         this.contract = this.web3.eth.contract(VaultAbi).at(address);
     }
 
-    getStatus(cb) {
+    getState(cb) {
         const st = {};
         let nPayments;
         async.series([
