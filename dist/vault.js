@@ -14,6 +14,8 @@ var _lodash = require("lodash");
 
 var _lodash2 = _interopRequireDefault(_lodash);
 
+var _runethtx = require("runethtx");
+
 var _VaultSol = require("../contracts/Vault.sol.js");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -104,45 +106,29 @@ var Vault = function () {
     }], [{
         key: "deploy",
         value: function deploy(web3, opts, cb) {
-            var account = void 0;
-            var vault = void 0;
-            _async2.default.series([function (cb1) {
-                if (opts.from) {
-                    account = opts.from;
-                    cb1();
-                } else {
-                    web3.eth.getAccounts(function (err, _accounts) {
-                        if (err) {
-                            cb(err);return;
-                        }
-                        if (_accounts.length === 0) return cb1(new Error("No account to deploy a contract"));
-                        account = _accounts[0];
-                        cb1();
-                    });
-                }
-            }, function (cb2) {
-                var contract = web3.eth.contract(_VaultSol.VaultAbi);
-                contract.new(opts.escapeCaller, opts.escapeDestination, opts.absoluteMinTimeLock, opts.timeLock, opts.securityGuard, opts.maxSecurityGuardDelay, {
-                    from: account,
-                    data: _VaultSol.VaultByteCode,
-                    gas: 3000000,
-                    value: opts.value || 0
-                }, function (err, _contract) {
+            var params = Object.assign({}, opts);
+            var promise = new Promise(function (resolve, reject) {
+                params.abi = _VaultSol.VaultAbi;
+                params.byteCode = _VaultSol.VaultByteCode;
+                return (0, _runethtx.deploy)(web3, params, function (err, _vault) {
                     if (err) {
-                        cb2(err);return;
+                        reject(err);
+                        return;
                     }
-                    if (typeof _contract.address !== "undefined") {
-                        vault = new Vault(web3, _contract.address);
-                        cb2();
-                    }
+                    var vault = new Vault(web3, _vault.address);
+                    resolve(vault);
                 });
-            }], function (err) {
-                if (err) {
-                    cb(err);
-                    return;
-                }
-                cb(null, vault);
             });
+
+            if (cb) {
+                promise.then(function (value) {
+                    cb(null, value);
+                }, function (reason) {
+                    cb(reason);
+                });
+            } else {
+                return promise;
+            }
         }
     }]);
 

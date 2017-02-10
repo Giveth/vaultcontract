@@ -1,6 +1,6 @@
 {
   "name": "vaultcontract",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "description": "Vault contract. Implementation of a safe timelock in solidity",
   "main": "dist/vault.js",
   "directories": {
@@ -35,7 +35,8 @@
   "homepage": "https://github.com/Giveth/vaultcontract",
   "dependencies": {
     "async": "^2.1.4",
-    "lodash": "^4.17.4"
+    "lodash": "^4.17.4",
+    "runethtx": "0.0.5"
   },
   "devDependencies": {
     "babel-core": "^6.22.1",
