@@ -66,7 +66,7 @@ var Vault = function () {
                     if (err) {
                         cb(err);return;
                     }
-                    st.balance = _this.web3.fromWei(_balance).toNumber();
+                    st.balance = _balance;
                     cb1();
                 });
             }, function (cb1) {

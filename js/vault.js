@@ -38,7 +38,7 @@ export default class Vault {
             (cb1) => {
                 this.web3.eth.getBalance(this.contract.address, (err, _balance) => {
                     if (err) { cb(err); return; }
-                    st.balance = this.web3.fromWei(_balance).toNumber();
+                    st.balance = _balance;
                     cb1();
                 });
             },
@@ -110,6 +110,4 @@ export default class Vault {
             return promise;
         }
     }
-
-
 }
