@@ -1,6 +1,6 @@
 import async from "async";
 import _ from "lodash";
-import { deploy } from "runethtx";
+import { deploy, send } from "runethtx";
 import { VaultAbi, VaultByteCode } from "../contracts/Vault.sol.js";
 
 export default class Vault {
@@ -73,6 +73,16 @@ export default class Vault {
         });
     }
 
+    collectAuthorizedPayment(opts, cb) {
+        return send(
+            Object.assign({}, opts, {
+                contract: this.contract,
+                method: "collectAuthorizedPayment",
+                extraGas: 5000,
+            }),
+            cb);
+    }
+
     static deploy(web3, opts, cb) {
         const params = Object.assign({}, opts);
         const promise = new Promise((resolve, reject) => {
@@ -100,4 +110,6 @@ export default class Vault {
             return promise;
         }
     }
+
+
 }

@@ -26,17 +26,14 @@ describe("Normal Scenario Vault test", () => {
             done();
         });
     });
-    it("should compile contracts", function (done)  {
-        this.timeout(30000);
+    it("should compile contracts", (done) => {
         ethConnector.compile(
             path.join(__dirname, "../contracts/Vault.sol"),
             path.join(__dirname, "../contracts/Vault.sol.js"),
             done,
         );
-    });
-    it("should deploy all the contracts ", function(done) {
-        this.timeout(20000);
-
+    }).timeout(20000);
+    it("should deploy all the contracts ", (done) => {
         Vault.deploy(ethConnector.web3, {
             escapeCaller,
             escapeDestination,
@@ -50,7 +47,7 @@ describe("Normal Scenario Vault test", () => {
             vault = _vault;
             done();
         });
-    });
+    }).timeout(20000);
     it("Should check roles", (done) => {
         vault.getState((err, st) => {
             assert.ifError(err);
@@ -234,16 +231,10 @@ describe("Normal Scenario Vault test", () => {
                 });
             },
             (cb) => {
-                vault.contract.collectAuthorizedPayment(
-                    0,
-                    {
-                        from: recipient,
-                        gas: 500000,
-                    },
-                    (err) => {
-                        assert.ifError(err);
-                        cb();
-                    });
+                vault.collectAuthorizedPayment({
+                    idPayment: 0,
+                    from: recipient,
+                }, cb);
             },
             (cb) => {
                 ethConnector.web3.eth.getBalance(recipient, (err, res) => {

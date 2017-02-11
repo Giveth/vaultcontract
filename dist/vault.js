@@ -103,6 +103,15 @@ var Vault = function () {
                 cb(null, st);
             });
         }
+    }, {
+        key: "collectAuthorizedPayment",
+        value: function collectAuthorizedPayment(opts, cb) {
+            return (0, _runethtx.send)(Object.assign({}, opts, {
+                contract: this.contract,
+                method: "collectAuthorizedPayment",
+                extraGas: 5000
+            }), cb);
+        }
     }], [{
         key: "deploy",
         value: function deploy(web3, opts, cb) {
