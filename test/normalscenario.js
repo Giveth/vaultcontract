@@ -65,11 +65,11 @@ describe("Normal Scenario Vault test", () => {
             assert.ifError(err);
             vault.getState((err2, st) => {
                 assert.ifError(err2);
-                assert.equal(st.balance, 50);
+                assert.equal(st.balance, ethConnector.web3.toWei(50));
                 done();
             });
         });
-    });
+    }).timeout(60000000);
     it("Should not allow authorizePayment", (done) => {
         vault.contract.authorizePayment(
             "testPayment",

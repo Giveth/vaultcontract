@@ -32,112 +32,100 @@ var Vault = function () {
 
     _createClass(Vault, [{
         key: "getState",
-        value: function getState(cb) {
+        value: function getState(_cb) {
             var _this = this;
 
-            var st = {};
-            var nPayments = void 0;
-            _async2.default.series([function (cb1) {
-                _this.contract.owner(function (err, _owner) {
-                    if (err) {
-                        cb(err);return;
-                    }
-                    st.owner = _owner;
-                    cb1();
-                });
-            }, function (cb1) {
-                _this.contract.escapeCaller(function (err, _escapeCaller) {
-                    if (err) {
-                        cb(err);return;
-                    }
-                    st.escapeCaller = _escapeCaller;
-                    cb1();
-                });
-            }, function (cb1) {
-                _this.contract.escapeDestination(function (err, _escapeDestination) {
-                    if (err) {
-                        cb(err);return;
-                    }
-                    st.escapeDestination = _escapeDestination;
-                    cb1();
-                });
-            }, function (cb1) {
-                _this.web3.eth.getBalance(_this.contract.address, function (err, _balance) {
-                    if (err) {
-                        cb(err);return;
-                    }
-                    st.balance = _balance;
-                    cb1();
-                });
-            }, function (cb1) {
-                _this.contract.numberOfAuthorizedPayments(function (err, res) {
-                    if (err) {
-                        cb(err);return;
-                    }
-                    nPayments = res.toNumber();
-                    st.payments = [];
-                    cb1();
-                });
-            }, function (cb1) {
-                _async2.default.eachSeries(_lodash2.default.range(0, nPayments), function (idPayment, cb2) {
-                    _this.contract.authorizedPayments(idPayment, function (err, res) {
+            return (0, _runethtx.asyncfunc)(function (cb) {
+                var st = {};
+                var nPayments = void 0;
+                _async2.default.series([function (cb1) {
+                    _this.contract.owner(function (err, _owner) {
                         if (err) {
                             cb(err);return;
                         }
-                        st.payments.push({
-                            description: res[0],
-                            spender: res[1],
-                            earliestPayTime: res[2].toNumber(),
-                            canceled: res[3],
-                            paid: res[4],
-                            recipient: res[5],
-                            amount: _this.web3.fromWei(res[6]).toNumber()
-                        });
-                        cb2();
+                        st.owner = _owner;
+                        cb1();
                     });
-                }, cb1);
-            }], function (err) {
-                if (err) {
-                    cb(err);return;
-                }
-                cb(null, st);
-            });
+                }, function (cb1) {
+                    _this.contract.escapeCaller(function (err, _escapeCaller) {
+                        if (err) {
+                            cb(err);return;
+                        }
+                        st.escapeCaller = _escapeCaller;
+                        cb1();
+                    });
+                }, function (cb1) {
+                    _this.contract.escapeDestination(function (err, _escapeDestination) {
+                        if (err) {
+                            cb(err);return;
+                        }
+                        st.escapeDestination = _escapeDestination;
+                        cb1();
+                    });
+                }, function (cb1) {
+                    _this.web3.eth.getBalance(_this.contract.address, function (err, _balance) {
+                        if (err) {
+                            cb(err);return;
+                        }
+                        st.balance = _balance;
+                        cb1();
+                    });
+                }, function (cb1) {
+                    _this.contract.numberOfAuthorizedPayments(function (err, res) {
+                        if (err) {
+                            cb(err);return;
+                        }
+                        nPayments = res.toNumber();
+                        st.payments = [];
+                        cb1();
+                    });
+                }, function (cb1) {
+                    _async2.default.eachSeries(_lodash2.default.range(0, nPayments), function (idPayment, cb2) {
+                        _this.contract.authorizedPayments(idPayment, function (err, res) {
+                            if (err) {
+                                cb(err);return;
+                            }
+                            st.payments.push({
+                                description: res[0],
+                                spender: res[1],
+                                earliestPayTime: res[2].toNumber(),
+                                canceled: res[3],
+                                paid: res[4],
+                                recipient: res[5],
+                                amount: _this.web3.fromWei(res[6]).toNumber()
+                            });
+                            cb2();
+                        });
+                    }, cb1);
+                }], function (err) {
+                    if (err) {
+                        cb(err);return;
+                    }
+                    cb(null, st);
+                });
+            }, _cb);
         }
     }, {
         key: "collectAuthorizedPayment",
         value: function collectAuthorizedPayment(opts, cb) {
-            return (0, _runethtx.send)(Object.assign({}, opts, {
-                contract: this.contract,
-                method: "collectAuthorizedPayment",
-                extraGas: 5000
-            }), cb);
+            return (0, _runethtx.sendContractTx)(this.web3, this.contract, "collectAuthorizedPayment", opts, cb);
         }
     }], [{
         key: "deploy",
-        value: function deploy(web3, opts, cb) {
-            var params = Object.assign({}, opts);
-            var promise = new Promise(function (resolve, reject) {
+        value: function deploy(web3, opts, _cb) {
+            return (0, _runethtx.asyncfunc)(function (cb) {
+                var params = Object.assign({}, opts);
                 params.abi = _VaultSol.VaultAbi;
                 params.byteCode = _VaultSol.VaultByteCode;
                 return (0, _runethtx.deploy)(web3, params, function (err, _vault) {
                     if (err) {
-                        reject(err);
+                        cb(err);
                         return;
                     }
                     var vault = new Vault(web3, _vault.address);
-                    resolve(vault);
+                    cb(null, vault);
                 });
-            });
-
-            if (cb) {
-                promise.then(function (value) {
-                    cb(null, value);
-                }, function (reason) {
-                    cb(reason);
-                });
-            } else {
-                return promise;
-            }
+            }, _cb);
         }
     }]);
 
