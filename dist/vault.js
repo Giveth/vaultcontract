@@ -93,7 +93,7 @@ var Vault = function () {
                                 canceled: res[3],
                                 paid: res[4],
                                 recipient: res[5],
-                                amount: _this.web3.fromWei(res[6]).toNumber()
+                                amount: res[6]
                             });
                             cb2();
                         });

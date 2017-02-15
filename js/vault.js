@@ -63,7 +63,7 @@ export default class Vault {
                                 canceled: res[ 3 ],
                                 paid: res[ 4 ],
                                 recipient: res[ 5 ],
-                                amount: this.web3.fromWei(res[ 6 ]).toNumber(),
+                                amount: res[ 6 ],
                             });
                             cb2();
                         });
