@@ -86,6 +86,7 @@ var Vault = function () {
                                 cb(err);return;
                             }
                             st.payments.push({
+                                idPayment: idPayment,
                                 description: res[0],
                                 spender: res[1],
                                 earliestPayTime: res[2].toNumber(),

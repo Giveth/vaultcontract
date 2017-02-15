@@ -56,6 +56,7 @@ export default class Vault {
                         this.contract.authorizedPayments(idPayment, (err, res) => {
                             if (err) { cb(err); return; }
                             st.payments.push({
+                                idPayment,
                                 description: res[ 0 ],
                                 spender: res[ 1 ],
                                 earliestPayTime: res[ 2 ].toNumber(),
