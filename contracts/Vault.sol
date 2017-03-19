@@ -43,6 +43,8 @@ contract Owned {
     ///  an unowned neutral vault, however that cannot be undone
     function changeOwner(address _newOwner) onlyOwner {
         owner = _newOwner;
+        NewOwner(msg.sender, _newOwner);
+ 
     }
 }
 /// @dev `Escapable` is a base level contract built off of the `Owned`
@@ -135,6 +137,7 @@ contract Vault is Escapable {
     event PaymentCanceled(uint indexed idPayment);
     event EtherReceived(address indexed from, uint amount);
     event SpenderAuthorization(address indexed spender, bool authorized);
+    event NewOwner(address indexed oldOwner, address indexed newOwner);
 
 /////////
 // Constructor
