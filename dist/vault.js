@@ -87,13 +87,14 @@ var Vault = function () {
                             }
                             st.payments.push({
                                 idPayment: idPayment,
-                                description: res[0],
-                                spender: res[1],
-                                earliestPayTime: res[2].toNumber(),
-                                canceled: res[3],
-                                paid: res[4],
-                                recipient: res[5],
-                                amount: res[6]
+                                name: res[0],
+                                reference: res[1],
+                                spender: res[2],
+                                earliestPayTime: res[3].toNumber(),
+                                canceled: res[4],
+                                paid: res[5],
+                                recipient: res[6],
+                                amount: res[7]
                             });
                             cb2();
                         });

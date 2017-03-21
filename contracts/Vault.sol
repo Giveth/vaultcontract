@@ -104,7 +104,8 @@ contract Vault is Escapable {
     ///  each payment making it easy to track the movement of funds
     ///  transparently
     struct Payment {
-        string description;     // What is the purpose of this payment
+        string name;     // What is the purpose of this payment
+        bytes32 reference;  // Reference of the payment.
         address spender;        // Who is sending the funds
         uint earliestPayTime;   // The earliest a payment can be made (Unix Time)
         bool canceled;         // If True then the payment has been canceled
@@ -202,14 +203,16 @@ contract Vault is Escapable {
 ////////
 
     /// @notice only `allowedSpenders[]` Creates a new `Payment`
-    /// @param _description Brief description of the payment that is authorized
+    /// @param _name Brief description of the payment that is authorized
+    /// @param _reference External reference of the payment
     /// @param _recipient Destination of the payment
     /// @param _amount Amount to be paid in wei
     /// @param _paymentDelay Number of seconds the payment is to be delayed, if
     ///  this value is below `timeLock` then the `timeLock` determines the delay
     /// @return The Payment ID number for the new authorized payment
     function authorizePayment(
-        string _description,
+        string _name,
+        bytes32 _reference,
         address _recipient,
         uint _amount,
         uint _paymentDelay
@@ -233,7 +236,8 @@ contract Vault is Escapable {
                                 now + timeLock;
         p.recipient = _recipient;
         p.amount = _amount;
-        p.description = _description;
+        p.name = _name;
+        p.reference = _reference;
         PaymentAuthorized(idPayment, p.recipient, p.amount);
         return idPayment;
     }

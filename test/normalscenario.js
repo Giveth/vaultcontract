@@ -109,6 +109,7 @@ describe("Normal Scenario Vault test", () => {
             (cb) => {
                 vault.contract.authorizePayment(
                     "testPayment",
+                    ethConnector.web3.sha3("Ref"),
                     recipient,
                     ethConnector.web3.toWei(10),
                     86400 * 2,
@@ -129,7 +130,8 @@ describe("Normal Scenario Vault test", () => {
                 vault.getState((err, st) => {
                     assert.ifError(err);
                     assert.equal(st.payments.length, 1);
-                    assert.equal(st.payments[ 0 ].description, "testPayment");
+                    assert.equal(st.payments[ 0 ].name, "testPayment");
+                    assert.equal(st.payments[ 0 ].reference, ethConnector.web3.sha3("Ref"));
                     assert.equal(st.payments[ 0 ].spender, spender);
                     assert.equal(st.payments[ 0 ].earliestPayTime, now + (86400 * 2));
                     assert.equal(st.payments[ 0 ].canceled, false);
