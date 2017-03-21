@@ -224,6 +224,9 @@ contract Vault is Escapable {
         Payment p = authorizedPayments[idPayment];
         p.spender = msg.sender;
 
+        // Overflow protection
+        if (_paymentDelay > 10**18) throw;
+
         // Determines the earliest the recipient can receive payment (Unix time)
         p.earliestPayTime = _paymentDelay >= timeLock ?
                                 now + _paymentDelay :
