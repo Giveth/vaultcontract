@@ -23,16 +23,16 @@ export default class Vault {
                     });
                 },
                 (cb1) => {
-                    this.contract.escapeCaller((err, _escapeCaller) => {
+                    this.contract.escapeHatchCaller((err, _escapeHatchCaller) => {
                         if (err) { cb(err); return; }
-                        st.escapeCaller = _escapeCaller;
+                        st.escapeHatchCaller = _escapeHatchCaller;
                         cb1();
                     });
                 },
                 (cb1) => {
-                    this.contract.escapeDestination((err, _escapeDestination) => {
+                    this.contract.escapeHatchDestination((err, _escapeHatchDestination) => {
                         if (err) { cb(err); return; }
-                        st.escapeDestination = _escapeDestination;
+                        st.escapeHatchDestination = _escapeHatchDestination;
                         cb1();
                     });
                 },

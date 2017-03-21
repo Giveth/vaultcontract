@@ -8,8 +8,8 @@ import Vault from "../js/vault";
 describe("Normal Scenario Vault test", () => {
     let vault;
     let owner;
-    let escapeCaller;
-    let escapeDestination;
+    let escapeHatchCaller;
+    let escapeHatchDestination;
     let securityGuard;
     let spender;
     let recipient;
@@ -18,8 +18,8 @@ describe("Normal Scenario Vault test", () => {
         ethConnector.init("testrpc", (err) => {
             if (err) { done(err); return; }
             owner = ethConnector.accounts[ 0 ];
-            escapeCaller = ethConnector.accounts[ 1 ];
-            escapeDestination = ethConnector.accounts[ 2 ];
+            escapeHatchCaller = ethConnector.accounts[ 1 ];
+            escapeHatchDestination = ethConnector.accounts[ 2 ];
             securityGuard = ethConnector.accounts[ 3 ];
             spender = ethConnector.accounts[ 4 ];
             recipient = ethConnector.accounts[ 5 ];
@@ -35,8 +35,8 @@ describe("Normal Scenario Vault test", () => {
     }).timeout(20000);
     it("should deploy all the contracts ", (done) => {
         Vault.deploy(ethConnector.web3, {
-            escapeCaller,
-            escapeDestination,
+            escapeHatchCaller,
+            escapeHatchDestination,
             absoluteMinTimeLock: 86400,
             timeLock: 86400 * 2,
             securityGuard,
@@ -52,11 +52,11 @@ describe("Normal Scenario Vault test", () => {
         vault.getState((err, st) => {
             assert.ifError(err);
             assert.equal(owner, st.owner);
-            assert.equal(escapeCaller, st.escapeCaller);
-            assert.equal(escapeDestination, st.escapeDestination);
+            assert.equal(escapeHatchCaller, st.escapeHatchCaller);
+            assert.equal(escapeHatchDestination, st.escapeHatchDestination);
             done();
         });
-    });
+    }).timeout(60000000);
     it("Should send some Ether to the Vault", (done) => {
         vault.contract.receiveEther({
             from: ethConnector.accounts[ 0 ],
@@ -135,12 +135,12 @@ describe("Normal Scenario Vault test", () => {
                     assert.equal(st.payments[ 0 ].canceled, false);
                     assert.equal(st.payments[ 0 ].paid, false);
                     assert.equal(st.payments[ 0 ].recipient, recipient);
-                    assert.equal(st.payments[ 0 ].amount, 10);
+                    assert.equal(st.payments[ 0 ].amount, ethConnector.web3.toWei(10));
                     cb();
                 });
             },
         ], done);
-    });
+    }).timeout(60000000);
     it("Should desauthorize Spender", (done) => {
         vault.contract.authorizeSpender(
             spender,

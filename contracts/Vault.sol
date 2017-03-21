@@ -47,53 +47,53 @@ contract Owned {
 }
 /// @dev `Escapable` is a base level contract built off of the `Owned`
 ///  contract that creates an escape hatch function to send its ether to
-///  `escapeDestination` when called by the `escapeCaller` in the case that
+///  `escapeHatchDestination` when called by the `escapeHatchCaller` in the case that
 ///  something unexpected happens
 contract Escapable is Owned {
-    address public escapeCaller;
-    address public escapeDestination;
+    address public escapeHatchCaller;
+    address public escapeHatchDestination;
 
-    /// @notice The Constructor assigns the `escapeDestination` and the
-    ///  `escapeCaller`
-    /// @param _escapeDestination The address of a safe location (usu a
+    /// @notice The Constructor assigns the `escapeHatchDestination` and the
+    ///  `escapeHatchCaller`
+    /// @param _escapeHatchDestination The address of a safe location (usu a
     ///  Multisig) to send the ether held in this contract
-    /// @param _escapeCaller The address of a trusted account or contract to
+    /// @param _escapeHatchCaller The address of a trusted account or contract to
     ///  call `escapeHatch()` to send the ether in this contract to the
-    ///  `escapeDestination` it would be ideal that `escapeCaller` cannot move
-    ///  funds out of `escapeDestination`
-    function Escapable(address _escapeCaller, address _escapeDestination) {
-        escapeCaller = _escapeCaller;
-        escapeDestination = _escapeDestination;
+    ///  `escapeHatchDestination` it would be ideal that `escapeHatchCaller` cannot move
+    ///  funds out of `escapeHatchDestination`
+    function Escapable(address _escapeHatchCaller, address _escapeHatchDestination) {
+        escapeHatchCaller = _escapeHatchCaller;
+        escapeHatchDestination = _escapeHatchDestination;
     }
 
-    /// @dev The addresses preassigned the `escapeCaller` role
+    /// @dev The addresses preassigned the `escapeHatchCaller` role
     ///  is the only addresses that can call a function with this modifier
-    modifier onlyEscapeCallerOrOwner {
-        if ((msg.sender != escapeCaller)&&(msg.sender != owner))
+    modifier onlyEscapeHatchCallerOrOwner {
+        if ((msg.sender != escapeHatchCaller)&&(msg.sender != owner))
             throw;
         _;
     }
 
     /// @notice The `escapeHatch()` should only be called as a last resort if a
     /// security issue is uncovered or something unexpected happened
-    function escapeHatch() onlyEscapeCallerOrOwner {
+    function escapeHatch() onlyEscapeHatchCallerOrOwner {
         uint total = this.balance;
-        // Send the total balance of this contract to the `escapeDestination`
-        if (!escapeDestination.send(total)) {
+        // Send the total balance of this contract to the `escapeHatchDestination`
+        if (!escapeHatchDestination.send(total)) {
             throw;
         }
-        EscapeCalled(total);
+        EscapeHatchCalled(total);
     }
     /// @notice Changes the address assigned to call `escapeHatch()`
-    /// @param _newEscapeCaller The address of a trusted account or contract to
+    /// @param _newEscapeHatchCaller The address of a trusted account or contract to
     ///  call `escapeHatch()` to send the ether in this contract to the
-    ///  `escapeDestination` it would be ideal that `escapeCaller` cannot
-    ///  move funds out of `escapeDestination`
-    function changeEscapeCaller(address _newEscapeCaller) onlyEscapeCallerOrOwner {
-        escapeCaller = _newEscapeCaller;
+    ///  `escapeHatchDestination` it would be ideal that `escapeHatchCaller` cannot
+    ///  move funds out of `escapeHatchDestination`
+    function changeEscapeCaller(address _newEscapeHatchCaller) onlyEscapeHatchCallerOrOwner {
+        escapeHatchCaller = _newEscapeHatchCaller;
     }
 
-    event EscapeCalled(uint amount);
+    event EscapeHatchCalled(uint amount);
 }
 
 /// @dev `Vault` is a higher level contract built off of the `Escapable`
@@ -141,11 +141,11 @@ contract Vault is Escapable {
 /////////
 
     /// @notice The Constructor creates the Vault on the blockchain
-    /// @param _escapeCaller The address of a trusted account or contract to
+    /// @param _escapeHatchCaller The address of a trusted account or contract to
     ///  call `escapeHatch()` to send the ether in this contract to the
-    ///  `escapeDestination` it would be ideal if `escapeCaller` cannot move
-    ///  funds out of `escapeDestination`
-    /// @param _escapeDestination The address of a safe location (usu a
+    ///  `escapeHatchDestination` it would be ideal if `escapeHatchCaller` cannot move
+    ///  funds out of `escapeHatchDestination`
+    /// @param _escapeHatchDestination The address of a safe location (usu a
     ///  Multisig) to send the ether held in this contract in an emergency
     /// @param _absoluteMinTimeLock The minimum number of seconds `timelock` can
     ///  be set to, if set to 0 the `owner` can remove the `timeLock` completely
@@ -158,12 +158,12 @@ contract Vault is Escapable {
     ///   that `securityGuard` can delay a payment so that the owner can cancel
     ///   the payment if needed
     function Vault(
-        address _escapeCaller,
-        address _escapeDestination,
+        address _escapeHatchCaller,
+        address _escapeHatchDestination,
         uint _absoluteMinTimeLock,
         uint _timeLock,
         address _securityGuard,
-        uint _maxSecurityGuardDelay) Escapable(_escapeCaller, _escapeDestination)
+        uint _maxSecurityGuardDelay) Escapable(_escapeHatchCaller, _escapeHatchDestination)
     {
         absoluteMinTimeLock = _absoluteMinTimeLock;
         timeLock = _timeLock;
@@ -317,7 +317,6 @@ contract Vault is Escapable {
     function setSecurityGuard(address _newSecurityGuard) onlyOwner {
         securityGuard = _newSecurityGuard;
     }
-
 
     /// @notice `onlyOwner` Changes `timeLock`; the new `timeLock` cannot be
     ///  lower than `absoluteMinTimeLock`

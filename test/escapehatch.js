@@ -13,8 +13,8 @@ function getRandom(min, max) {
 
 describe("Vault test Escape hatch", () => {
     let vault;
-    let escapeCaller;
-    let escapeDestination;
+    let escapeHatchCaller;
+    let escapeHatchDestination;
     let securityGuard;
     let guest;
     const amount = ethConnector.web3.toWei(getRandom(1, 10));
@@ -23,30 +23,29 @@ describe("Vault test Escape hatch", () => {
 //        ethConnector.init('rpc', function(err) {
         ethConnector.init("testrpc", (err) => {
             if (err) return done(err);
-            escapeCaller = ethConnector.accounts[ 1 ];
-            escapeDestination = ethConnector.accounts[ 2 ];
+            escapeHatchCaller = ethConnector.accounts[ 1 ];
+            escapeHatchDestination = ethConnector.accounts[ 2 ];
             securityGuard = ethConnector.accounts[ 3 ];
             guest = ethConnector.accounts[ 6 ];
             done();
         });
     });
 
-    it("should compile contracts", function (done)  {
-        this.timeout(30000);
+    it("should compile contracts", (done) => {
         ethConnector.compile(
             path.join(__dirname, "../contracts/Vault.sol"),
             path.join(__dirname, "../contracts/Vault.sol.js"),
             done,
         );
-    });
+    }).timeout(30000);
 
     it("should deploy all the contracts ", function (done) {
         this.timeout(30000);
 
         Vault.deploy(ethConnector.web3, {
 //            from: ethConnector.accounts[ 0 ],
-            escapeCaller,
-            escapeDestination,
+            escapeHatchCaller,
+            escapeHatchDestination,
             absoluteMinTimeLock: 86400,
             timeLock: 86400 * 2,
             securityGuard,
@@ -73,6 +72,14 @@ describe("Vault test Escape hatch", () => {
         });
     });
 
+    it("Should read scape hatch", (done) => {
+        vault.escapeHatchCaller((err, _escapeHatchCaller) => {
+            assert.ifError(err);
+            assert.equal(_escapeHatchCaller, escapeHatchCaller);
+            done();
+        });
+    });
+
     it("Fail to use the escape hatch", (done) => {
         vault.escapeHatch({
             from: guest,
@@ -84,13 +91,13 @@ describe("Vault test Escape hatch", () => {
 
     it("Use the escape hatch", (done) => {
         vault.escapeHatch({
-            from: escapeCaller,
+            from: escapeHatchCaller,
         }, (err) => {
             assert.ifError(err);
             ethConnector.web3.eth.getBalance(vault.address, (err2, _balanceVault) => {
                 assert.ifError(err2);
                 assert.equal(_balanceVault, 0);
-                ethConnector.web3.eth.getBalance(escapeDestination, (err3, _balanceDest) => {
+                ethConnector.web3.eth.getBalance(escapeHatchDestination, (err3, _balanceDest) => {
                     assert.ifError(err3);
                     // accounts for original account balance of 100 eth
                     assert.equal(_balanceDest.minus(ethConnector.web3.toWei(100)), amount);

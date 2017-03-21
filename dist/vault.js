@@ -47,19 +47,19 @@ var Vault = function () {
                         cb1();
                     });
                 }, function (cb1) {
-                    _this.contract.escapeCaller(function (err, _escapeCaller) {
+                    _this.contract.escapeHatchCaller(function (err, _escapeHatchCaller) {
                         if (err) {
                             cb(err);return;
                         }
-                        st.escapeCaller = _escapeCaller;
+                        st.escapeHatchCaller = _escapeHatchCaller;
                         cb1();
                     });
                 }, function (cb1) {
-                    _this.contract.escapeDestination(function (err, _escapeDestination) {
+                    _this.contract.escapeHatchDestination(function (err, _escapeHatchDestination) {
                         if (err) {
                             cb(err);return;
                         }
-                        st.escapeDestination = _escapeDestination;
+                        st.escapeHatchDestination = _escapeHatchDestination;
                         cb1();
                     });
                 }, function (cb1) {
