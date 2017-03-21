@@ -44,8 +44,9 @@ contract Owned {
     function changeOwner(address _newOwner) onlyOwner {
         owner = _newOwner;
         NewOwner(msg.sender, _newOwner);
- 
     }
+
+    event NewOwner(address indexed oldOwner, address indexed newOwner);
 }
 /// @dev `Escapable` is a base level contract built off of the `Owned`
 ///  contract that creates an escape hatch function to send its ether to
@@ -138,7 +139,6 @@ contract Vault is Escapable {
     event PaymentCanceled(uint indexed idPayment);
     event EtherReceived(address indexed from, uint amount);
     event SpenderAuthorization(address indexed spender, bool authorized);
-    event NewOwner(address indexed oldOwner, address indexed newOwner);
 
 /////////
 // Constructor
@@ -280,6 +280,9 @@ contract Vault is Escapable {
     /// @param _delay The number of seconds to delay the payment
     function delayPayment(uint _idPayment, uint _delay) onlySecurityGuard {
         if (_idPayment >= authorizedPayments.length) throw;
+
+        // Overflow test
+        if (_delay > 10**18) throw;
 
         Payment p = authorizedPayments[_idPayment];
 
