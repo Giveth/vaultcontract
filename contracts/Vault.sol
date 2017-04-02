@@ -1,6 +1,5 @@
 pragma solidity ^0.4.6;
 
-
 /*
     Copyright 2016, Jordi Baylina
 
@@ -26,82 +25,38 @@ pragma solidity ^0.4.6;
 ///  be a safe place to store funds equipped with optional variable time delays
 ///  to allow for an optional escape hatch
 
-/// @dev `Owned` is a base level contract that assigns an `owner` that can be
-///  later changed
-contract Owned {
-    /// @dev `owner` is the only address that can call a function with this
-    /// modifier
-    modifier onlyOwner { if (msg.sender != owner) throw; _; }
+import "Owned.sol";
+import "Token.sol";
+import "Escapable.sol";
 
-    address public owner;
+contract Limiter {
+    /// @notice This function is called from the vault when a new
+    ///  payment is authorized. This function shoud throw if this payment
+    ///  is not allowed.
+    function onPaymentAuthorization(
+        uint _idPayment,
+        address _spender,
+        address _recipient,
+        uint _amount,
+        bytes _params
+    );
 
-    /// @notice The Constructor assigns the message sender to be `owner`
-    function Owned() { owner = msg.sender;}
-
-    /// @notice `owner` can step down and assign some other address to this role
-    /// @param _newOwner The address of the new owner. 0x0 can be used to create
-    ///  an unowned neutral vault, however that cannot be undone
-    function changeOwner(address _newOwner) onlyOwner {
-        owner = _newOwner;
-        NewOwner(msg.sender, _newOwner);
-    }
-
-    event NewOwner(address indexed oldOwner, address indexed newOwner);
+    /// @notice This function is called from the vault when a new
+    ///  payment is collected. This function shoud throw if this collection
+    ///  is not allowed.
+    function onPaymentCollection(
+        uint _idPayment,
+        address _spender,
+        address _recipient,
+        uint _amount,
+        bytes _params
+    );
 }
-/// @dev `Escapable` is a base level contract built off of the `Owned`
-///  contract that creates an escape hatch function to send its ether to
-///  `escapeHatchDestination` when called by the `escapeHatchCaller` in the case that
-///  something unexpected happens
-contract Escapable is Owned {
-    address public escapeHatchCaller;
-    address public escapeHatchDestination;
 
-    /// @notice The Constructor assigns the `escapeHatchDestination` and the
-    ///  `escapeHatchCaller`
-    /// @param _escapeHatchDestination The address of a safe location (usu a
-    ///  Multisig) to send the ether held in this contract
-    /// @param _escapeHatchCaller The address of a trusted account or contract to
-    ///  call `escapeHatch()` to send the ether in this contract to the
-    ///  `escapeHatchDestination` it would be ideal that `escapeHatchCaller` cannot move
-    ///  funds out of `escapeHatchDestination`
-    function Escapable(address _escapeHatchCaller, address _escapeHatchDestination) {
-        escapeHatchCaller = _escapeHatchCaller;
-        escapeHatchDestination = _escapeHatchDestination;
-    }
-
-    /// @dev The addresses preassigned the `escapeHatchCaller` role
-    ///  is the only addresses that can call a function with this modifier
-    modifier onlyEscapeHatchCallerOrOwner {
-        if ((msg.sender != escapeHatchCaller)&&(msg.sender != owner))
-            throw;
-        _;
-    }
-
-    /// @notice The `escapeHatch()` should only be called as a last resort if a
-    /// security issue is uncovered or something unexpected happened
-    function escapeHatch() onlyEscapeHatchCallerOrOwner {
-        uint total = this.balance;
-        // Send the total balance of this contract to the `escapeHatchDestination`
-        if (!escapeHatchDestination.send(total)) {
-            throw;
-        }
-        EscapeHatchCalled(total);
-    }
-    /// @notice Changes the address assigned to call `escapeHatch()`
-    /// @param _newEscapeHatchCaller The address of a trusted account or contract to
-    ///  call `escapeHatch()` to send the ether in this contract to the
-    ///  `escapeHatchDestination` it would be ideal that `escapeHatchCaller` cannot
-    ///  move funds out of `escapeHatchDestination`
-    function changeEscapeCaller(address _newEscapeHatchCaller) onlyEscapeHatchCallerOrOwner {
-        escapeHatchCaller = _newEscapeHatchCaller;
-    }
-
-    event EscapeHatchCalled(uint amount);
-}
 
 /// @dev `Vault` is a higher level contract built off of the `Escapable`
 ///  contract that holds funds for Campaigns and automates payments.
-contract Vault is Escapable {
+contract Vault is Escapable, Owned {
 
     /// @dev `Payment` is a public structure that describes the details of
     ///  each payment making it easy to track the movement of funds
@@ -125,9 +80,27 @@ contract Vault is Escapable {
     uint public timeLock;
     uint public maxSecurityGuardDelay;
 
+
+    // Accounting Values
+
+    uint public totalCollected;
+    uint public totalAuthorized;
+
+    Limiter public absoluteLimiter;
+
     /// @dev The white list of approved addresses allowed to set up && receive
     ///  payments from this vault
-    mapping (address => bool) public allowedSpenders;
+    struct Spender {
+        address spender;
+        string name;
+        bytes32 reference;
+        Limiter limiter;
+        bytes params;
+        uint idx;
+    }
+
+    address[] public spenderAddresses;
+    mapping (address => Spender) public spenders;
 
     /// @dev The address assigned the role of `securityGuard` is the only
     ///  addresses that can call a function with this modifier
@@ -137,7 +110,6 @@ contract Vault is Escapable {
     event PaymentAuthorized(uint indexed idPayment, address indexed recipient, uint amount);
     event PaymentExecuted(uint indexed idPayment, address indexed recipient, uint amount);
     event PaymentCanceled(uint indexed idPayment);
-    event EtherReceived(address indexed from, uint amount);
     event SpenderAuthorization(address indexed spender, bool authorized);
 
 /////////
@@ -162,17 +134,76 @@ contract Vault is Escapable {
     ///   that `securityGuard` can delay a payment so that the owner can cancel
     ///   the payment if needed
     function Vault(
+        address _baseToken,
         address _escapeHatchCaller,
         address _escapeHatchDestination,
         uint _absoluteMinTimeLock,
         uint _timeLock,
         address _securityGuard,
-        uint _maxSecurityGuardDelay) Escapable(_escapeHatchCaller, _escapeHatchDestination)
+        uint _maxSecurityGuardDelay) Escapable(_baseToken, _escapeHatchCaller, _escapeHatchDestination)
     {
         absoluteMinTimeLock = _absoluteMinTimeLock;
         timeLock = _timeLock;
         securityGuard = _securityGuard;
         maxSecurityGuardDelay = _maxSecurityGuardDelay;
+    }
+
+///////////////////////////////
+// Spender related functions
+///////////////////////////////
+
+   function numberOfSpenders() constant returns(uint) {
+        return spenderAddresses.length;
+    }
+
+    /// @notice `onlyOwner` Adds a spender to the `allowedSpenders[]` white list
+    /// @param _spender The address of the contract being authorized
+    /// @param _reference Reference of the spender
+    /// @param _params Params to ba taked in a ccount by the limiter.
+    function authorizeSpender(
+        address _spender,
+        string _name,
+        bytes32 _reference,
+        address _limiter,
+        bytes _params
+    ) onlyOwner {
+        unauthorizeSpender(_spender);
+        spenders[_spender].spender = _spender;
+        spenders[_spender].name = _name;
+        spenders[_spender].reference = _reference;
+        spenders[_spender].limiter = Limiter(_limiter);
+        spenders[_spender].params = _params;
+
+        spenders[_spender].idx = spenderAddresses.length;
+        spenderAddresses.length++;
+        spenderAddresses[spenderAddresses.length - 1] = _spender;
+    }
+
+    /// @notice `onlyOwner` Adds a spender to the `allowedSpenders[]` white list
+    /// @param _spender The address of the contract being unauthorized
+    function unauthorizeSpender(address _spender) onlyOwner {
+        Spender deletedSpender = spenders[_spender];
+        if (deletedSpender.spender == 0) return;
+
+        Spender lastSpender = spenders[spenderAddresses[spenderAddresses.length -1]];
+
+        lastSpender.idx = deletedSpender.idx;
+        spenderAddresses[lastSpender.idx] = lastSpender.spender;
+        spenderAddresses.length --;
+
+        deletedSpender.spender = 0;
+        deletedSpender.name = "";
+        deletedSpender.reference = 0x0;
+        deletedSpender.limiter = Limiter(0x0);
+        deletedSpender.params = new bytes(0);
+        deletedSpender.idx = 0;
+    }
+
+    function isAuthorized(address _spender) constant returns (bool) {
+        Spender spender = spenders[_spender];
+        if (_spender == 0) return false;
+        if (spender.spender != _spender) return false;
+        return true;
     }
 
 /////////
@@ -185,21 +216,7 @@ contract Vault is Escapable {
         return authorizedPayments.length;
     }
 
-//////
-// Receive Ether
-//////
 
-    /// @notice Called anytime ether is sent to the contract && creates an event
-    /// to more easily track the incoming transactions
-    function receiveEther() payable {
-        EtherReceived(msg.sender, msg.value);
-    }
-
-    /// @notice The fall back function is called whenever ether is sent to this
-    ///  contract
-    function () payable {
-        receiveEther();
-    }
 
 ////////
 // Spender Interface
@@ -222,7 +239,10 @@ contract Vault is Escapable {
     ) returns(uint) {
 
         // Fail if you arent on the `allowedSpenders` white list
-        if (!allowedSpenders[msg.sender] ) throw;
+
+        Spender spender = spenders[msg.sender];
+        if (spender.spender != msg.sender) throw;
+
         uint idPayment = authorizedPayments.length;       // Unique Payment ID
         authorizedPayments.length++;
 
@@ -241,7 +261,50 @@ contract Vault is Escapable {
         p.amount = _amount;
         p.name = _name;
         p.reference = _reference;
+
+        if (address(absoluteLimiter) != 0) {
+            absoluteLimiter.onPaymentAuthorization(
+                idPayment,
+                p.spender,
+                p.recipient,
+                p.amount,
+                spender.params);
+        }
+        if (address(spender.limiter) != 0) {
+            spender.limiter.onPaymentAuthorization(
+                idPayment,
+                p.spender,
+                p.recipient,
+                p.amount,
+                spender.params);
+        }
+
+        totalAuthorized += p.amount;
         PaymentAuthorized(idPayment, p.recipient, p.amount);
+
+            if ((now >= p.earliestPayTime) && (getBalance() >= p.amount)) {
+            if (address(absoluteLimiter) != 0) {
+                absoluteLimiter.onPaymentCollection(
+                    idPayment,
+                    p.spender,
+                    p.recipient,
+                    p.amount,
+                    spender.params);
+            }
+            if (address(spender.limiter) != 0) {
+                spender.limiter.onPaymentCollection(
+                    idPayment,
+                    p.spender,
+                    p.recipient,
+                    p.amount,
+                    spender.params);
+            }
+            p.paid = true; // Set the payment to being paid
+            transfer(p.recipient, p.amount);// Make the payment
+
+            totalCollected += p.amount;
+            PaymentExecuted(idPayment, p.recipient, p.amount);
+        }
         return idPayment;
     }
 
@@ -251,25 +314,46 @@ contract Vault is Escapable {
     /// @param _idPayment The payment ID to be executed
     function collectAuthorizedPayment(uint _idPayment) {
 
+
         // Check that the `_idPayment` has been added to the payments struct
         if (_idPayment >= authorizedPayments.length) throw;
 
         Payment p = authorizedPayments[_idPayment];
 
+        Spender spender = spenders[p.spender];
+        if (spender.spender != p.spender) throw;
+
         // Checking for reasons not to execute the payment
         if (msg.sender != p.recipient) throw;
-        if (!allowedSpenders[p.spender]) throw;
         if (now < p.earliestPayTime) throw;
         if (p.canceled) throw;
         if (p.paid) throw;
-        if (this.balance < p.amount) throw;
+        if (getBalance() < p.amount) throw;
+
+        if (address(absoluteLimiter) != 0) {
+            absoluteLimiter.onPaymentCollection(
+                _idPayment,
+                p.spender,
+                p.recipient,
+                p.amount,
+                spender.params);
+        }
+        if (address(spender.limiter) != 0) {
+            spender.limiter.onPaymentCollection(
+                _idPayment,
+                p.spender,
+                p.recipient,
+                p.amount,
+                spender.params);
+        }
 
         p.paid = true; // Set the payment to being paid
-        if (!p.recipient.send(p.amount)) {  // Make the payment
-            throw;
-        }
+        transfer(p.recipient, p.amount);// Make the payment
+
+        totalCollected += p.amount;
         PaymentExecuted(_idPayment, p.recipient, p.amount);
      }
+
 
 /////////
 // SecurityGuard Interface
@@ -306,20 +390,11 @@ contract Vault is Escapable {
 
         Payment p = authorizedPayments[_idPayment];
 
-
         if (p.canceled) throw;
         if (p.paid) throw;
 
         p.canceled = true;
         PaymentCanceled(_idPayment);
-    }
-
-    /// @notice `onlyOwner` Adds a spender to the `allowedSpenders[]` white list
-    /// @param _spender The address of the contract being authorized/unauthorized
-    /// @param _authorize `true` if authorizing and `false` if unauthorizing
-    function authorizeSpender(address _spender, bool _authorize) onlyOwner {
-        allowedSpenders[_spender] = _authorize;
-        SpenderAuthorization(_spender, _authorize);
     }
 
     /// @notice `onlyOwner` Sets the address of `securityGuard`
