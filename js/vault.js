@@ -1,6 +1,6 @@
 import async from "async";
 import _ from "lodash";
-import { deploy, sendContractTx, asyncfunc  } from "runethtx";
+import { deploy, sendContractTx, asyncfunc } from "runethtx";
 import { VaultAbi, VaultByteCode } from "../contracts/Vault.sol.js";
 
 export default class Vault {
