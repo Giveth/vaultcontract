@@ -49,6 +49,7 @@ contract Escapable {
     ///  move funds out of `escapeHatchDestination`
     function changeEscapeCaller(address _newEscapeHatchCaller) onlyEscapeHatchCaller {
         escapeHatchCaller = _newEscapeHatchCaller;
+        EscapeHatchCallerChanged(escapeHatchCaller);
     }
 
     function getBalance() constant returns(uint) {
@@ -87,5 +88,6 @@ contract Escapable {
     }
 
     event EscapeHatchCalled(uint amount);
+    event EscapeHatchCallerChanged(address indexed newEscapeHatchCaller);
     event EtherReceived(address indexed from, uint amount);
 }
