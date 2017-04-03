@@ -91,8 +91,6 @@ describe("Normal Scenario Vault test", () => {
             spender,
             "Spender1",
             ethConnector.web3.sha3("Spender1"),
-            "0x0",
-            "0x",
             {
                 from: owner,
                 gas: 200000,
@@ -101,12 +99,9 @@ describe("Normal Scenario Vault test", () => {
                 assert.ifError(err);
                 vault.contract.spenders(spender, (err2, res) => {
                     assert.ifError(err2);
-                    assert.equal(res[ 0 ], spender);
-                    assert.equal(res[ 1 ], "Spender1");
-                    assert.equal(res[ 2 ], ethConnector.web3.sha3("Spender1"));
-                    assert.equal(res[ 3 ], "0x0000000000000000000000000000000000000000");
-                    assert.equal(res[ 4 ], "0x");
-                    assert.equal(res[ 5 ], 0);
+                    assert.equal(res[ 0 ], "Spender1");
+                    assert.equal(res[ 1 ], ethConnector.web3.sha3("Spender1"));
+                    assert.equal(res[ 2 ], 1);
                     done();
                 });
             });

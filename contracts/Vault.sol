@@ -29,30 +29,6 @@ import "Owned.sol";
 import "Token.sol";
 import "Escapable.sol";
 
-contract Limiter {
-    /// @notice This function is called from the vault when a new
-    ///  payment is authorized. This function shoud throw if this payment
-    ///  is not allowed.
-    function onPaymentAuthorization(
-        uint _idPayment,
-        address _spender,
-        address _recipient,
-        uint _amount,
-        bytes _params
-    );
-
-    /// @notice This function is called from the vault when a new
-    ///  payment is collected. This function shoud throw if this collection
-    ///  is not allowed.
-    function onPaymentCollection(
-        uint _idPayment,
-        address _spender,
-        address _recipient,
-        uint _amount,
-        bytes _params
-    );
-}
-
 
 /// @dev `Vault` is a higher level contract built off of the `Escapable`
 ///  contract that holds funds for Campaigns and automates payments.
@@ -86,16 +62,11 @@ contract Vault is Escapable, Owned {
     uint public totalCollected;
     uint public totalAuthorized;
 
-    Limiter public absoluteLimiter;
-
     /// @dev The white list of approved addresses allowed to set up && receive
     ///  payments from this vault
     struct Spender {
-        address spender;
         string name;
         bytes32 reference;
-        Limiter limiter;
-        bytes params;
         uint idx;
     }
 
@@ -140,14 +111,13 @@ contract Vault is Escapable, Owned {
         uint _absoluteMinTimeLock,
         uint _timeLock,
         address _securityGuard,
-        uint _maxSecurityGuardDelay,
-        address _limiter) Escapable(_baseToken, _escapeHatchCaller, _escapeHatchDestination)
+        uint _maxSecurityGuardDelay
+    ) Escapable(_baseToken, _escapeHatchCaller, _escapeHatchDestination)
     {
         absoluteMinTimeLock = _absoluteMinTimeLock;
         timeLock = _timeLock;
         securityGuard = _securityGuard;
         maxSecurityGuardDelay = _maxSecurityGuardDelay;
-        absoluteLimiter = Limiter(_limiter);
     }
 
 ///////////////////////////////
@@ -161,23 +131,17 @@ contract Vault is Escapable, Owned {
     /// @notice `onlyOwner` Adds a spender to the `allowedSpenders[]` white list
     /// @param _spender The address of the contract being authorized
     /// @param _reference Reference of the spender
-    /// @param _params Params to ba taked in a ccount by the limiter.
     function authorizeSpender(
         address _spender,
         string _name,
-        bytes32 _reference,
-        address _limiter,
-        bytes _params
+        bytes32 _reference
     ) onlyOwner {
         unauthorizeSpender(_spender);
-        spenders[_spender].spender = _spender;
         spenders[_spender].name = _name;
         spenders[_spender].reference = _reference;
-        spenders[_spender].limiter = Limiter(_limiter);
-        spenders[_spender].params = _params;
 
-        spenders[_spender].idx = spenderAddresses.length;
         spenderAddresses.length++;
+        spenders[_spender].idx = spenderAddresses.length;
         spenderAddresses[spenderAddresses.length - 1] = _spender;
     }
 
@@ -185,26 +149,23 @@ contract Vault is Escapable, Owned {
     /// @param _spender The address of the contract being unauthorized
     function unauthorizeSpender(address _spender) onlyOwner {
         Spender deletedSpender = spenders[_spender];
-        if (deletedSpender.spender == 0) return;
+        if (deletedSpender.idx == 0) return;
 
         Spender lastSpender = spenders[spenderAddresses[spenderAddresses.length -1]];
 
         lastSpender.idx = deletedSpender.idx;
-        spenderAddresses[lastSpender.idx] = lastSpender.spender;
+        spenderAddresses[lastSpender.idx -1] = spenderAddresses[spenderAddresses.length -1];
         spenderAddresses.length --;
 
-        deletedSpender.spender = 0;
         deletedSpender.name = "";
         deletedSpender.reference = 0x0;
-        deletedSpender.limiter = Limiter(0x0);
-        deletedSpender.params = new bytes(0);
         deletedSpender.idx = 0;
     }
 
     function isAuthorized(address _spender) constant returns (bool) {
         Spender spender = spenders[_spender];
         if (_spender == 0) return false;
-        if (spender.spender != _spender) return false;
+        if (spender.idx == 0) return false;
         return true;
     }
 
@@ -243,7 +204,7 @@ contract Vault is Escapable, Owned {
         // Fail if you arent on the `allowedSpenders` white list
 
         Spender spender = spenders[msg.sender];
-        if (spender.spender != msg.sender) throw;
+        if (spender.idx == 0) throw;
 
         uint idPayment = authorizedPayments.length;       // Unique Payment ID
         authorizedPayments.length++;
@@ -264,43 +225,10 @@ contract Vault is Escapable, Owned {
         p.name = _name;
         p.reference = _reference;
 
-        if (address(absoluteLimiter) != 0) {
-            absoluteLimiter.onPaymentAuthorization(
-                idPayment,
-                p.spender,
-                p.recipient,
-                p.amount,
-                spender.params);
-        }
-        if (address(spender.limiter) != 0) {
-            spender.limiter.onPaymentAuthorization(
-                idPayment,
-                p.spender,
-                p.recipient,
-                p.amount,
-                spender.params);
-        }
-
         totalAuthorized += p.amount;
         PaymentAuthorized(idPayment, p.recipient, p.amount);
 
-            if ((now >= p.earliestPayTime) && (getBalance() >= p.amount)) {
-            if (address(absoluteLimiter) != 0) {
-                absoluteLimiter.onPaymentCollection(
-                    idPayment,
-                    p.spender,
-                    p.recipient,
-                    p.amount,
-                    spender.params);
-            }
-            if (address(spender.limiter) != 0) {
-                spender.limiter.onPaymentCollection(
-                    idPayment,
-                    p.spender,
-                    p.recipient,
-                    p.amount,
-                    spender.params);
-            }
+        if ((now >= p.earliestPayTime) && (getBalance() >= p.amount)) {
             p.paid = true; // Set the payment to being paid
             transfer(p.recipient, p.amount);// Make the payment
 
@@ -323,7 +251,7 @@ contract Vault is Escapable, Owned {
         Payment p = authorizedPayments[_idPayment];
 
         Spender spender = spenders[p.spender];
-        if (spender.spender != p.spender) throw;
+        if (spender.idx == 0) throw;
 
         // Checking for reasons not to execute the payment
         if (msg.sender != p.recipient) throw;
@@ -331,23 +259,6 @@ contract Vault is Escapable, Owned {
         if (p.canceled) throw;
         if (p.paid) throw;
         if (getBalance() < p.amount) throw;
-
-        if (address(absoluteLimiter) != 0) {
-            absoluteLimiter.onPaymentCollection(
-                _idPayment,
-                p.spender,
-                p.recipient,
-                p.amount,
-                spender.params);
-        }
-        if (address(spender.limiter) != 0) {
-            spender.limiter.onPaymentCollection(
-                _idPayment,
-                p.spender,
-                p.recipient,
-                p.amount,
-                spender.params);
-        }
 
         p.paid = true; // Set the payment to being paid
         transfer(p.recipient, p.amount);// Make the payment
