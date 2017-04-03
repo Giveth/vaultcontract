@@ -25,8 +25,8 @@ contract Escapable {
     ///  `escapeHatchDestination` it would be ideal that `escapeHatchCaller`
     /// cannot move funds out of `escapeHatchDestination`
     function Escapable(
-        address _baseToken, 
-        address _escapeHatchCaller, 
+        address _baseToken,
+        address _escapeHatchCaller,
         address _escapeHatchDestination) {
         baseToken = Token(_baseToken);
         escapeHatchCaller = _escapeHatchCaller;
@@ -54,7 +54,7 @@ contract Escapable {
     ///  call `escapeHatch()` to send the ether in this contract to the
     ///  `escapeHatchDestination` it would be ideal that `escapeHatchCaller` cannot
     ///  move funds out of `escapeHatchDestination`
-    function changeEscapeCaller(address _newEscapeHatchCaller
+    function changeEscapeHatchCaller(address _newEscapeHatchCaller
         ) onlyEscapeHatchCaller {
         escapeHatchCaller = _newEscapeHatchCaller;
         EscapeHatchCallerChanged(escapeHatchCaller);
