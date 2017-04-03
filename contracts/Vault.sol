@@ -140,19 +140,21 @@ contract Vault is Escapable, Owned {
         uint _absoluteMinTimeLock,
         uint _timeLock,
         address _securityGuard,
-        uint _maxSecurityGuardDelay) Escapable(_baseToken, _escapeHatchCaller, _escapeHatchDestination)
+        uint _maxSecurityGuardDelay,
+        address _limiter) Escapable(_baseToken, _escapeHatchCaller, _escapeHatchDestination)
     {
         absoluteMinTimeLock = _absoluteMinTimeLock;
         timeLock = _timeLock;
         securityGuard = _securityGuard;
         maxSecurityGuardDelay = _maxSecurityGuardDelay;
+        absoluteLimiter = Limiter(_limiter);
     }
 
 ///////////////////////////////
 // Spender related functions
 ///////////////////////////////
 
-   function numberOfSpenders() constant returns(uint) {
+    function numberOfSpenders() constant returns(uint) {
         return spenderAddresses.length;
     }
 
