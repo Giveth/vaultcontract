@@ -57,6 +57,7 @@ contract Escapable {
     function changeEscapeCaller(address _newEscapeHatchCaller
         ) onlyEscapeHatchCaller {
         escapeHatchCaller = _newEscapeHatchCaller;
+        EscapeHatchCallerChanged(escapeHatchCaller);
     }
     /// @notice Returns the balance of the `baseToken` stored in this contract
     function getBalance() constant returns(uint) {
@@ -97,5 +98,6 @@ contract Escapable {
         receiveEther();
     }
     event EscapeHatchCalled(uint amount);
+    event EscapeHatchCallerChanged(address indexed newEscapeHatchCaller);
     event EtherReceived(address indexed from, uint amount);
 }
