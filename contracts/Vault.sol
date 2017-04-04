@@ -60,7 +60,7 @@ contract Vault is Escapable, Owned {
     uint public totalAuthorizedToBeSpent;    // Counter
 
     /// @dev The white list of approved addresses allowed to set up && receive
-    ///  payments from this vault 
+    ///  payments from this vault
     struct Spender {
         string name;
         bytes32 reference; // Hash used to uniquely identify the spender
@@ -314,6 +314,8 @@ contract Vault is Escapable, Owned {
 
         if (p.canceled) throw;
         if (p.paid) throw;
+
+        totalAuthorizedToBeSpent -= p.amount;
 
         p.canceled = true;
         PaymentCanceled(_idPayment);

@@ -82,7 +82,9 @@ export default class Vault {
             this.web3,
             this.contract,
             "collectAuthorizedPayment",
-            opts,
+            Object.assign({}, opts, {
+                extraGas: 50000,
+            }),
             cb);
     }
 

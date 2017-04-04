@@ -211,8 +211,6 @@ describe("Normal Scenario Vault test", () => {
             spender,
             "Spender1",
             ethConnector.web3.sha3("Spender1"),
-            "0x0",
-            "0x",
             {
                 from: owner,
                 gas: 200000,
@@ -241,7 +239,10 @@ describe("Normal Scenario Vault test", () => {
                 vault.collectAuthorizedPayment({
                     idPayment: 0,
                     from: recipient,
-                }, cb);
+                }, (err) => {
+                    assert.ifError(err);
+                    cb();
+                });
             },
             (cb) => {
                 ethConnector.web3.eth.getBalance(recipient, (err, res) => {
