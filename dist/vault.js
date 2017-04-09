@@ -36,12 +36,14 @@ var Vault = function () {
             var _this = this;
 
             return (0, _runethtx.asyncfunc)(function (cb) {
-                var st = {};
+                var st = {
+                    address: _this.contract.address
+                };
                 var nPayments = void 0;
                 _async2.default.series([function (cb1) {
                     _this.contract.owner(function (err, _owner) {
                         if (err) {
-                            cb(err);return;
+                            cb1(err);return;
                         }
                         st.owner = _owner;
                         cb1();
@@ -49,7 +51,7 @@ var Vault = function () {
                 }, function (cb1) {
                     _this.contract.escapeHatchCaller(function (err, _escapeHatchCaller) {
                         if (err) {
-                            cb(err);return;
+                            cb1(err);return;
                         }
                         st.escapeHatchCaller = _escapeHatchCaller;
                         cb1();
@@ -57,15 +59,15 @@ var Vault = function () {
                 }, function (cb1) {
                     _this.contract.escapeHatchDestination(function (err, _escapeHatchDestination) {
                         if (err) {
-                            cb(err);return;
+                            cb1(err);return;
                         }
                         st.escapeHatchDestination = _escapeHatchDestination;
                         cb1();
                     });
                 }, function (cb1) {
-                    _this.web3.eth.getBalance(_this.contract.address, function (err, _balance) {
+                    _this.contract.getBalance(function (err, _balance) {
                         if (err) {
-                            cb(err);return;
+                            cb1(err);return;
                         }
                         st.balance = _balance;
                         cb1();
@@ -73,7 +75,7 @@ var Vault = function () {
                 }, function (cb1) {
                     _this.contract.numberOfAuthorizedPayments(function (err, res) {
                         if (err) {
-                            cb(err);return;
+                            cb1(err);return;
                         }
                         nPayments = res.toNumber();
                         st.payments = [];
@@ -83,7 +85,7 @@ var Vault = function () {
                     _async2.default.eachSeries(_lodash2.default.range(0, nPayments), function (idPayment, cb2) {
                         _this.contract.authorizedPayments(idPayment, function (err, res) {
                             if (err) {
-                                cb(err);return;
+                                cb2(err);return;
                             }
                             st.payments.push({
                                 idPayment: idPayment,
@@ -110,7 +112,9 @@ var Vault = function () {
     }, {
         key: "collectAuthorizedPayment",
         value: function collectAuthorizedPayment(opts, cb) {
-            return (0, _runethtx.sendContractTx)(this.web3, this.contract, "collectAuthorizedPayment", opts, cb);
+            return (0, _runethtx.sendContractTx)(this.web3, this.contract, "collectAuthorizedPayment", Object.assign({}, opts, {
+                extraGas: 50000
+            }), cb);
         }
     }], [{
         key: "deploy",

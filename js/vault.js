@@ -12,40 +12,42 @@ export default class Vault {
 
     getState(_cb) {
         return asyncfunc((cb) => {
-            const st = {};
+            const st = {
+                address: this.contract.address,
+            };
             let nPayments;
             async.series([
                 (cb1) => {
                     this.contract.owner((err, _owner) => {
-                        if (err) { cb(err); return; }
+                        if (err) { cb1(err); return; }
                         st.owner = _owner;
                         cb1();
                     });
                 },
                 (cb1) => {
                     this.contract.escapeHatchCaller((err, _escapeHatchCaller) => {
-                        if (err) { cb(err); return; }
+                        if (err) { cb1(err); return; }
                         st.escapeHatchCaller = _escapeHatchCaller;
                         cb1();
                     });
                 },
                 (cb1) => {
                     this.contract.escapeHatchDestination((err, _escapeHatchDestination) => {
-                        if (err) { cb(err); return; }
+                        if (err) { cb1(err); return; }
                         st.escapeHatchDestination = _escapeHatchDestination;
                         cb1();
                     });
                 },
                 (cb1) => {
-                    this.web3.eth.getBalance(this.contract.address, (err, _balance) => {
-                        if (err) { cb(err); return; }
+                    this.contract.getBalance((err, _balance) => {
+                        if (err) { cb1(err); return; }
                         st.balance = _balance;
                         cb1();
                     });
                 },
                 (cb1) => {
                     this.contract.numberOfAuthorizedPayments((err, res) => {
-                        if (err) { cb(err); return; }
+                        if (err) { cb1(err); return; }
                         nPayments = res.toNumber();
                         st.payments = [];
                         cb1();
@@ -54,7 +56,7 @@ export default class Vault {
                 (cb1) => {
                     async.eachSeries(_.range(0, nPayments), (idPayment, cb2) => {
                         this.contract.authorizedPayments(idPayment, (err, res) => {
-                            if (err) { cb(err); return; }
+                            if (err) { cb2(err); return; }
                             st.payments.push({
                                 idPayment,
                                 name: res[ 0 ],
