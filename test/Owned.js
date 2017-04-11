@@ -22,7 +22,6 @@ contract('Owned', function(accounts) {
 
     assert.isTrue(owner === other);
   });
-/*
 
   it('should prevent non-owners from transfering', async function() {
     const other = accounts[2];
@@ -34,7 +33,7 @@ contract('Owned', function(accounts) {
       assertJump(error);
     }
   });
-
+/*
   it('should guard ownership against stuck state', async function() {
     let originalOwner = await owned.owner();
     await owned.changeOwner(null, {from: originalOwner});
