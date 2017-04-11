@@ -1,9 +1,10 @@
 'use strict';
+
 const assertJump = require('./helpers/assertJump');
 
 var Vault = artifacts.require('../contracts/Vault.sol');
 
-contract('Owned', function(accounts) {
+contract('Vault', function(accounts) {
   let owned;
 
   beforeEach(async function() {
