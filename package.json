@@ -34,7 +34,8 @@
     "truffle-default-builder": "^2.0.0"
   },
   "devDependencies": {
-    "babel-polyfill": "^6.23.0"
+    "babel-polyfill": "^6.23.0",
+    "codecov": "^2.1.0"
   },
   "scripts": {
     "test": "truffle test"
