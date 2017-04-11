@@ -6,6 +6,7 @@ cover:
 
 install:
 	npm install truffle@3.2.1 -g
+	npm install
 	git clone http://github.com/JoinColony/solcover.git
 	( cd solcover ; npm install )
 
