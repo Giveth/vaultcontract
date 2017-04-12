@@ -17,6 +17,8 @@ pragma solidity ^0.4.6;
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+ import "./Escapable.sol";
+
 /// @title Vault Contract
 /// @author Jordi Baylina
 /// @notice This contract holds funds for Campaigns and automates payments. For
@@ -25,88 +27,9 @@ pragma solidity ^0.4.6;
 ///  be a safe place to store funds equipped with optional variable time delays
 ///  to allow for an optional escape hatch
 
-contract Vault {
-
-    /// =====================================================================
-    /// == OWNED 
-    /// =====================================================================
-
-    /// @dev `owner` is the only address that can call a function with this
-    /// modifier
-    modifier onlyOwner { if (msg.sender != owner) throw; _; }
-
-    address public owner;
-
-    /// @notice The Constructor assigns the message sender to be `owner`
-    function Owned() { owner = msg.sender;}
-
-    /// @notice `owner` can step down and assign some other address to this role
-    /// @param _newOwner The address of the new owner. 0x0 can be used to create
-    ///  an unowned neutral vault, however that cannot be undone
-    function changeOwner(address _newOwner) onlyOwner {
-        owner = _newOwner;
-        NewOwner(msg.sender, _newOwner);
-    }
-
-    event NewOwner(address indexed oldOwner, address indexed newOwner);
-
-
-    /// =====================================================================
-    /// == Escapable 
-    /// =====================================================================
-
-    address public escapeHatchCaller;
-    address public escapeHatchDestination;
-
-    /// @notice The Constructor assigns the `escapeHatchDestination` and the
-    ///  `escapeHatchCaller`
-    /// @param _escapeHatchDestination The address of a safe location (usu a
-    ///  Multisig) to send the ether held in this contract
-    /// @param _escapeHatchCaller The address of a trusted account or contract to
-    ///  call `escapeHatch()` to send the ether in this contract to the
-    ///  `escapeHatchDestination` it would be ideal that `escapeHatchCaller` cannot move
-    ///  funds out of `escapeHatchDestination`
-    function Escapable(address _escapeHatchCaller, address _escapeHatchDestination) {
-        Owned();
-        escapeHatchCaller = _escapeHatchCaller;
-        escapeHatchDestination = _escapeHatchDestination;
-    }
-
-    /// @dev The addresses preassigned the `escapeHatchCaller` role
-    ///  is the only addresses that can call a function with this modifier
-    modifier onlyEscapeHatchCallerOrOwner {
-        if ((msg.sender != escapeHatchCaller)&&(msg.sender != owner))
-            throw;
-        _;
-    }
-
-    /// @notice The `escapeHatch()` should only be called as a last resort if a
-    /// security issue is uncovered or something unexpected happened
-    function escapeHatch() onlyEscapeHatchCallerOrOwner {
-        uint total = this.balance;
-        // Send the total balance of this contract to the `escapeHatchDestination`
-        if (!escapeHatchDestination.send(total)) {
-            throw;
-        }
-        EscapeHatchCalled(total);
-    }
-    /// @notice Changes the address assigned to call `escapeHatch()`
-    /// @param _newEscapeHatchCaller The address of a trusted account or contract to
-    ///  call `escapeHatch()` to send the ether in this contract to the
-    ///  `escapeHatchDestination` it would be ideal that `escapeHatchCaller` cannot
-    ///  move funds out of `escapeHatchDestination`
-    function changeEscapeCaller(address _newEscapeHatchCaller) onlyEscapeHatchCallerOrOwner {
-        escapeHatchCaller = _newEscapeHatchCaller;
-    }
-
-    event EscapeHatchCalled(uint amount);
-
-    /// =====================================================================
-    /// == Vault 
-    /// =====================================================================
-
-    /// @dev `Vault` is a higher level contract built off of the `Escapable`
-    ///  contract that holds funds for Campaigns and automates payments.
+/// @dev `Vault` is a higher level contract built off of the `Escapable`
+///  contract that holds funds for Campaigns and automates payments.
+contract Vault is Escapable {
 
     /// @dev `Payment` is a public structure that describes the details of
     ///  each payment making it easy to track the movement of funds
@@ -172,9 +95,8 @@ contract Vault {
         uint _absoluteMinTimeLock,
         uint _timeLock,
         address _securityGuard,
-        uint _maxSecurityGuardDelay) 
+        uint _maxSecurityGuardDelay) Escapable(_escapeHatchCaller, _escapeHatchDestination)
     {
-        Escapable(_escapeHatchCaller, _escapeHatchDestination);
         absoluteMinTimeLock = _absoluteMinTimeLock;
         timeLock = _timeLock;
         securityGuard = _securityGuard;
@@ -240,12 +162,11 @@ contract Vault {
         if (_paymentDelay > 10**18) throw;
 
         // Determines the earliest the recipient can receive payment (Unix time)
-        if (_paymentDelay >= timeLock ) {
+        if (_paymentDelay >= timeLock) {
             p.earliestPayTime = now + _paymentDelay;
         } else {
             p.earliestPayTime = now + timeLock;
         }
-
         p.recipient = _recipient;
         p.amount = _amount;
         p.name = _name;

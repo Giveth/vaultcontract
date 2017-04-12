@@ -1,5 +1,5 @@
-var Vault = artifacts.require("./Vault.sol");
+var Owned = artifacts.require("./Owned.sol");
 
 module.exports = function(deployer) {
-  deployer.deploy(Vault);
+  deployer.deploy(Owned);
 };

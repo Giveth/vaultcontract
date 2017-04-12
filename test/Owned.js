@@ -2,13 +2,13 @@
 
 const assertJump = require('./helpers/assertJump');
 
-var Vault = artifacts.require('../contracts/Vault.sol');
+var Owned = artifacts.require('../contracts/Owned.sol');
 
-contract('Vault', function(accounts) {
+contract('Owned', function(accounts) {
   let owned;
 
   beforeEach(async function() {
-    owned = await Vault.new();
+    owned = await Owned.new();
   });
 
   it('should have an owner', async function() {
