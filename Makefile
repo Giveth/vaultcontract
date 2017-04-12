@@ -11,7 +11,5 @@ install:
 	( cd solcover ; npm install )
 
 travis: install
-	echo ---RUNNING COEVERED TESTS----
 	( cd solcover ; node ./runCoveredTests.js ; cd ..  )
-	echo ---UPLOADING COVERAGE TO ----
-	cat ./codecov/coverage/lcov.info | ./node_modules/.bin/codecov
+	./node_modules/.bin/codecov
