@@ -45,17 +45,25 @@ shell.ls('./../originalContracts/**/*.sol').forEach(file => {
 shell.cp('./../originalContracts/Migrations.sol', './../contracts/Migrations.sol');
 
 shell.rm('./allFiredEvents'); // Delete previous results
+console.log("**test*1")
 shell.exec('truffle test --network test');
 
+console.log("**test*2")
 const events = fs.readFileSync('./allFiredEvents').toString().split('\n');
 events.pop();
+console.log("**test*3")
 // The pop here isn't a bug - there is an empty line at the end of this file, so we
 // don't want to include it as an event.
 coverage.generate(events, './../originalContracts/');
 
+console.log("**test*4")
 fs.writeFileSync('./coverage.json', JSON.stringify(coverage.coverage));
 
+console.log("**test*5")
 shell.exec('./node_modules/istanbul/lib/cli.js report lcov');
 testrpcProcess.kill();
+console.log("**test*6")
 shell.rm('-rf', './../contracts');
+console.log("**test*7")
 shell.mv('./../originalContracts', './../contracts');
+console.log("**test*8")
