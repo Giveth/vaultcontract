@@ -7,7 +7,7 @@ cover:
 install:
 	npm install truffle@3.2.1 -g
 	npm install
-	# git clone http://github.com/JoinColony/solcover.git
+	git clone http://github.com/adriamb/solcover.git
 	( cd solcover ; npm install )
 
 travis: install
