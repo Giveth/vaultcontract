@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/adriamb/vaultcontract.svg?branch=master)](https://travis-ci.org/adriamb/vaultcontract)
+[![codecov](https://codecov.io/gh/adriamb/vaultcontract/branch/master/graph/badge.svg)](https://codecov.io/gh/adriamb/vaultcontract)
 
 # Vault
 
