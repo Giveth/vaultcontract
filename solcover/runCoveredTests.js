@@ -67,3 +67,4 @@ shell.rm('-rf', './../contracts');
 console.log("**test*7")
 shell.mv('./../originalContracts', './../contracts');
 console.log("**test*8")
+process.exit(0);
