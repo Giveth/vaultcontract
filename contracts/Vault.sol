@@ -209,6 +209,9 @@ contract Vault is Escapable, Owned {
         uint _paymentDelay
     ) returns(uint) {
 
+        // amount overflow protection. Thank you to Adria Massanet
+        if (_amount > 2**64) throw;
+
         // Fail if you aren't on the `spenders[]` whitelist
         Spender spender = spenders[msg.sender];
         if (spender.idx == 0) throw;
