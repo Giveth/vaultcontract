@@ -210,7 +210,7 @@ contract Vault is Escapable, Owned {
     ) returns(uint) {
 
         // amount overflow protection. Thank you to Adria Massanet
-        if (_amount > 2**64) throw;
+        if (_amount > 2**128) throw;
 
         // Fail if you aren't on the `spenders[]` whitelist
         Spender spender = spenders[msg.sender];
