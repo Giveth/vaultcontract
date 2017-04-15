@@ -5,10 +5,10 @@ cover:
 	open ./solcover/coverage/lcov-report/index.html
 
 install:
-	npm install truffle@3.2.1 -g
-	npm install
+	yarn
+	yarn global add truffle@3.2.1
 	git clone http://github.com/adriamb/solcover.git
-	( cd solcover ; npm install )
+	( cd solcover ; yarn install )
 
 travis: install
 	( cd solcover ; node ./runCoveredTests.js ; cd ..  )
