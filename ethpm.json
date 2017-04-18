@@ -1,0 +1,25 @@
+{
+  "package_name": "vaultcontract",
+  "version": "0.3.0-alpha",
+  "description": "Vault contract. Implementation of a safe timelock in solidity",
+  "authors": [
+    "Jordi Baylina"
+  ],
+  "keywords": [
+    "dao",
+    "solidity",
+    "token",
+    "charity",
+    "smart",
+    "contract",
+    "vault",
+    "giveth",
+    "ethereum",
+    "safe",
+    "timelock"
+  ],
+  "dependencies": {
+    "zeppelin": "1.0.4"
+  },
+  "license": "GPL-3.0"
+}
