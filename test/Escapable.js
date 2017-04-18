@@ -1,6 +1,6 @@
 /* eslint no-undef: "off" */
 
-const assertJump = require("./../node_modules/zeppelin-solidity/test/helpers/assertJump.js");
+const assertJump = require("./helpers/assertJump.js");
 
 const Escapable = artifacts.require("../contracts/Escapable.sol");
 const TestStandardToken = artifacts.require("../contracts/helpers/TestStandardToken.sol");

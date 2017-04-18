@@ -39,8 +39,5 @@
   },
   "scripts": {
     "test": "truffle test"
-  },
-  "dependencies": {
-    "zeppelin-solidity": "^1.0.4"
   }
 }

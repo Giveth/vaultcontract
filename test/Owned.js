@@ -1,6 +1,6 @@
 /* eslint no-undef: "off" */
 
-const assertJump = require("./../node_modules/zeppelin-solidity/test/helpers/assertJump.js");
+const assertJump = require("./helpers/assertJump.js");
 
 const Owned = artifacts.require("../contracts/Owned.sol");
 
