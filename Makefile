@@ -9,7 +9,7 @@ install:
 	npm install
 	truffle install
 	git clone http://github.com/adriamb/solcover.git
-	( cd solcover ; npm install )
+	( cd solcover ; git checkout 7012cda82ee19535ff87d6e6faeb65261b79487a ; npm install )
 
 travis: install
 	( cd solcover ; node ./runCoveredTests.js ; cd ..  )
