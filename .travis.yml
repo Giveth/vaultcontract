@@ -4,8 +4,4 @@ language: node_js
 node_js:
   - "7"
 script: make travis
-cache:
-  directories:
-    - node_modules
-    - solcover/node_modules
     
