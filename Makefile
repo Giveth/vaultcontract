@@ -7,6 +7,7 @@ cover:
 install:
 	npm install truffle@3.2.1 -g
 	npm install
+	truffle install
 	git clone http://github.com/adriamb/solcover.git
 	( cd solcover ; npm install )
 
