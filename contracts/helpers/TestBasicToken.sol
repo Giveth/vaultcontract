@@ -1,6 +1,6 @@
 pragma solidity ^0.4.6;
 
-import "../../installed_contracts/zeppelin/contracts/token/StandardToken.sol";
+import "../../node_modules/zeppelin-solidity/contracts/token/StandardToken.sol";
 
 contract TestStandardToken is StandardToken {
   

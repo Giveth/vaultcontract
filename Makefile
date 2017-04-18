@@ -1,6 +1,6 @@
 test:
 	{ testrpc -d > /tmp/testrpc.log & echo $$! > /tmp/testrpc.pid; }
-	truffle test
+	-truffle test
 	kill `cat /tmp/testrpc.pid`
 
 cover: fulltest
@@ -17,7 +17,6 @@ install:
 	npm install eslint@3.19.0 -g
 	npm install eslint@3.x babel-eslint@6 -g
 	npm install
-	truffle install
 	git clone http://github.com/adriamb/solcover.git
 	( cd solcover ; git checkout 7012cda82ee19535ff87d6e6faeb65261b79487a ; npm install )
 
