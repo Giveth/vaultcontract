@@ -7,14 +7,12 @@ cover: fulltest
 	open ./solcover/coverage/lcov-report/index.html
 
 fulltest: npm_modules solcover
-	-cp originalContracts/* contracts
-	-rm -rf originalContracts
-	( cd solcover ; node ./runCoveredTests.js ; cd ..  )
+	( cd solcover ; node ./runCoveredTests.js )
 	eslint test
 
 solcover:
 	git clone http://github.com/adriamb/solcover.git
-	( cd solcover ; git checkout 7012cda82ee19535ff87d6e6faeb65261b79487a ; npm install )	
+	( cd solcover ; git checkout 4e22facad7cfe2be5545cfcbdee16094678e9601 ; npm install )
 
 npm_modules:
 	npm install
@@ -29,6 +27,7 @@ install:
 	npm install eslint-plugin-import -g
 
 travis: install npm_modules solcover fulltest
+	./node_modules/.bin/codecov
 
 .PHONY: test
 .PHONY: cover
