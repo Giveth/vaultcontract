@@ -27,6 +27,7 @@ install:
 	npm install eslint-plugin-import -g
 
 travis: install npm_modules solcover fulltest
+	./node_modules/.bin/codecov
 
 .PHONY: test
 .PHONY: cover
