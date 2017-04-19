@@ -22,7 +22,11 @@ npm_modules:
 install:
 	npm install truffle@3.2.1 -g
 	npm install eslint@3.19.0 -g
-	npm install babel-eslint@6 eslint-config-airbnb eslint-plugin-jsx-a11y eslint-plugin-react -g
+	npm install babel-eslint@6 -g
+	npm install eslint-config-airbnb -g
+	npm install eslint-plugin-jsx-a11y -g
+	npm install eslint-plugin-react -g
+	npm install eslint-plugin-import -g
 
 travis: install npm_modules solcover fulltest
 
