@@ -1,9 +1,14 @@
-/* eslint no-undef: "off" */
+/* global artifacts */
+/* global contract */
+/* global web3 */
+/* global assert */
 
 const assertJump = require("./helpers/assertJump.js");
 
 const Escapable = artifacts.require("../contracts/Escapable.sol");
-const TestStandardToken = artifacts.require("../contracts/helpers/TestStandardToken.sol");
+const TestStandardToken = artifacts.require(
+  "../contracts/helpers/TestStandardToken.sol",
+);
 
 contract("Escapable", (accounts) => {
     const ZEROWEI = web3.toBigNumber("0");
@@ -19,26 +24,28 @@ contract("Escapable", (accounts) => {
     let standardToken;
     let escapableToken;
 
-    const filterCoverageTopics =
-    logs => logs.filter(
-      log => !log.event.startsWith("__")
-             && log.event !== "Transfer"
-             && log.event !== "Approval",
+    const filterCoverageTopics = logs =>
+    logs.filter(
+      log =>
+        !log.event.startsWith("__") &&
+        log.event !== "Transfer" &&
+        log.event !== "Approval",
     );
 
     beforeEach(async () => {
         escapableEth = await Escapable.new(
-      ETHEREUMTOKENADDR,          // _baseToken
-      ESCAPEHATCHCALLERADDR,      // _escapeHatchCaller
+      ETHEREUMTOKENADDR, // _baseToken
+      ESCAPEHATCHCALLERADDR, // _escapeHatchCaller
       ESCAPEHATCHDESTINATIONADDR, // _escapeHatchDestination
     );
 
         standardToken = await TestStandardToken.new(
-      OWNERADDR, ESCAPEHATCHDESTINATIONADDR,
+      OWNERADDR,
+      ESCAPEHATCHDESTINATIONADDR,
     );
         escapableToken = await Escapable.new(
-      standardToken.address,      // _baseToken
-      ESCAPEHATCHCALLERADDR,      // _escapeHatchCaller
+      standardToken.address, // _baseToken
+      ESCAPEHATCHCALLERADDR, // _escapeHatchCaller
       ESCAPEHATCHDESTINATIONADDR, // _escapeHatchDestination
     );
     });
@@ -47,28 +54,32 @@ contract("Escapable", (accounts) => {
         try {
             await escapableEth.escapeHatch({ from: OTHERADDR });
         } catch (error) {
-            assertJump(error);
+            return assertJump(error);
         }
+        assert.fail("should have thrown before");
     });
 
     it("prevent non-authorized call to changeEscapeHatchCaller()", async () => {
         try {
             await escapableEth.changeEscapeHatchCaller(OTHERADDR, { from: OTHERADDR });
         } catch (error) {
-            assertJump(error);
+            return assertJump(error);
         }
+        assert.fail("should have thrown before");
     });
 
     it("changeEscapeHatchCaller() changes the permission", async () => {
-        let result = await escapableEth.changeEscapeHatchCaller(
-          OTHERADDR, { from: ESCAPEHATCHCALLERADDR });
+        let result = await escapableEth.changeEscapeHatchCaller(OTHERADDR, {
+            from: ESCAPEHATCHCALLERADDR,
+        });
         let logs = filterCoverageTopics(result.logs);
         assert.equal(logs.length, 1);
         assert.equal(logs[ 0 ].event, "EscapeHatchCallerChanged");
         assert.equal(logs[ 0 ].args.newEscapeHatchCaller, OTHERADDR);
 
-        result = await escapableEth.changeEscapeHatchCaller(
-          ESCAPEHATCHCALLERADDR, { from: OTHERADDR });
+        result = await escapableEth.changeEscapeHatchCaller(ESCAPEHATCHCALLERADDR, {
+            from: OTHERADDR,
+        });
         logs = filterCoverageTopics(result.logs);
         assert.equal(logs.length, 1);
         assert.equal(logs[ 0 ].event, "EscapeHatchCallerChanged");
@@ -103,7 +114,10 @@ contract("Escapable", (accounts) => {
     });
 
     it("ether: receiveEther() generates a log", async () => {
-        const result = await escapableEth.receiveEther({ from: OTHERADDR, value: ONEWEI });
+        const result = await escapableEth.receiveEther({
+            from: OTHERADDR,
+            value: ONEWEI,
+        });
         const logs = filterCoverageTopics(result.logs);
         assert.equal(logs.length, 1);
         assert.equal(logs[ 0 ].event, "EtherReceived");
@@ -115,21 +129,28 @@ contract("Escapable", (accounts) => {
         const balance = web3.eth.getBalance(ESCAPEHATCHDESTINATIONADDR);
         await escapableEth.receiveEther({ from: OTHERADDR, value: ONEWEI });
 
-        const result = await escapableEth.escapeHatch({ from: ESCAPEHATCHCALLERADDR });
+        const result = await escapableEth.escapeHatch({
+            from: ESCAPEHATCHCALLERADDR,
+        });
         const logs = filterCoverageTopics(result.logs);
         assert.equal(logs.length, 1);
         assert.equal(logs[ 0 ].event, "EscapeHatchCalled");
         assert.equal(logs[ 0 ].args.amount, "1");
 
-        assert.isTrue(web3.eth.getBalance(ESCAPEHATCHDESTINATIONADDR).equals(balance.plus(ONEWEI)));
+        assert.isTrue(
+      web3.eth
+        .getBalance(ESCAPEHATCHDESTINATIONADDR)
+        .equals(balance.plus(ONEWEI)),
+    );
     });
 
     it("token: cannot send ethers", async () => {
         try {
             await escapableToken.receiveEther({ from: OTHERADDR, value: ONEWEI });
         } catch (error) {
-            assertJump(error);
+            return assertJump(error);
         }
+        assert.fail("should have thrown before");
     });
 
     it("token: getBalance() matches the token balance", async () => {
@@ -139,11 +160,15 @@ contract("Escapable", (accounts) => {
     });
 
     it("token: escapeHatch() sends amount to the destination", async () => {
-        await standardToken.transfer(escapableToken.address, ONEWEI, { from: OWNERADDR });
+        await standardToken.transfer(escapableToken.address, ONEWEI, {
+            from: OWNERADDR,
+        });
         let contractBalance = await standardToken.balanceOf(escapableToken.address);
         assert.isTrue(contractBalance.equals(ONEWEI));
 
-        const result = await escapableToken.escapeHatch({ from: ESCAPEHATCHCALLERADDR });
+        const result = await escapableToken.escapeHatch({
+            from: ESCAPEHATCHCALLERADDR,
+        });
         const logs = filterCoverageTopics(result.logs);
         assert.equal(logs.length, 1);
         assert.equal(logs[ 0 ].event, "EscapeHatchCalled");
@@ -152,7 +177,9 @@ contract("Escapable", (accounts) => {
         contractBalance = await standardToken.balanceOf(escapableToken.address);
         assert.isTrue(contractBalance.equals(ZEROWEI));
 
-        const escapeHatchDestBalance = await standardToken.balanceOf(ESCAPEHATCHDESTINATIONADDR);
+        const escapeHatchDestBalance = await standardToken.balanceOf(
+      ESCAPEHATCHDESTINATIONADDR,
+    );
         assert.isTrue(escapeHatchDestBalance.equals(ONEWEI));
     });
 });

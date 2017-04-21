@@ -1,4 +1,7 @@
-/* eslint no-undef: "off" */
+/* global artifacts */
+/* global contract */
+/* global web3 */
+/* global assert */
 
 const assertJump = require("./helpers/assertJump.js");
 
@@ -31,10 +34,11 @@ contract("Owned", (accounts) => {
         try {
             await owned.changeOwner(other, { from: other });
         } catch (error) {
-            assertJump(error);
+            return assertJump(error);
         }
+        assert.fail("should have thrown before");
     });
-/*
+  /*
   it('should guard ownership against stuck state', async function() {
     let originalOwner = await owned.owner();
     await owned.changeOwner(null, {from: originalOwner});
