@@ -1,4 +1,7 @@
-/* eslint no-undef: "off" */
+/* global artifacts */
+/* global contract */
+/* global web3 */
+/* global assert */
 
 const assertJump = require("./helpers/assertJump.js")
 
