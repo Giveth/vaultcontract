@@ -3,5 +3,5 @@ sudo: required
 language: node_js
 node_js:
   - "7"
-script: make travis
+script: npm run travis
     
