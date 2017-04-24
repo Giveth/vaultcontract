@@ -10,16 +10,19 @@ const timer = require("./helpers/timer.js");
 
 const Vault = artifacts.require("../contracts/Vault.sol");
 
-contract("Vault", (accounts) => {
+contract("Vault::Receive,Authorize,Unauthorize,Collect", (accounts) => {
     const TEN_WEI = web3.toBigNumber("10");
     const FIFTY_WEI = web3.toBigNumber("50");
 
-    const owner = accounts[ 0 ];
-    const escapeHatchCaller = accounts[ 1 ];
-    const escapeHatchDestination = accounts[ 2 ];
-    const securityGuard = accounts[ 3 ];
-    const spender = accounts[ 4 ];
-    const recipient = accounts[ 5 ];
+    const {
+        0: owner,
+        1: escapeHatchCaller,
+        2: escapeHatchDestination,
+        3: securityGuard,
+        4: spender,
+        5: recipient
+    } = accounts
+
 
     let vault;
 
@@ -68,10 +71,10 @@ contract("Vault", (accounts) => {
         await vault.authorizeSpender(spender, "Spender1", spender1Sha3, {
             from: owner,
         });
-        const res = await vault.spenders(spender);
-        assert.equal(res[ 0 ], "Spender1");
-        assert.equal(res[ 1 ], spender1Sha3);
-        assert.equal(res[ 2 ], "1");
+        const [name, nameHash, idx] = await vault.spenders(spender);
+        assert.equal(name, "Spender1");
+        assert.equal(nameHash, spender1Sha3);
+        assert.equal(idx, "1");
     });
 
     it("Should allow authorizePayment", async () => {
