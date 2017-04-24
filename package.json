@@ -43,6 +43,6 @@
     "fulltest": "npm install && npm run solcover && node ./runCoveredTests.js && eslint --fix test",
     "solcover": "git clone http://github.com/adriamb/solcover.git && cd solcover && git checkout 4e22facad7cfe2be5545cfcbdee16094678e9601 && npm install",
     "deps": "npm install --save-dev truffle@3.2.1 eslint@3.19.0 babel-eslint@6 eslint-plugin-import",
-    "travis": "npm run deps && npm install && npm run solcover && npm run fulltest && ./node_modules/.bin/codecov"
+    "travis": "npm run deps && npm run fulltest && ./node_modules/.bin/codecov"
   }
 }
