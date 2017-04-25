@@ -39,6 +39,7 @@ contract('Vault', accounts => {
             )
     })
 
+    // function numberOfSpenders() constant returns(uint)
     it('Should return the number of spenders allocated to the vault', async () => {
         const nameHash = web3.sha3('dani')
         const nameHash2 = web3.sha3('jordi')
@@ -55,7 +56,7 @@ contract('Vault', accounts => {
 
     })
 
-
+    // function numberOfAuthorizedPayments() constant returns (uint) 
     // Payment[] public authorizedPayments
     it('Should correctly add authorized payments to authorizedPayments[]', async () => {
         const nameHash = web3.sha3('dani'),
@@ -96,6 +97,7 @@ contract('Vault', accounts => {
     // SecurityGuard Interface
     /////////
 
+    // function setSecurityGuard(address _newSecurityGuard) onlyOwner
     it('Should correctly assign the Security Guard permission', async () => {
         let SG = await vault.securityGuard.call()
         assert.equal(SG, securityGuard)
@@ -120,12 +122,14 @@ contract('Vault', accounts => {
         return assert.fail('Test has failed')
     })    
 
+// Delays a payment for a set number of seconds
+// function delayPayment(uint _idPayment, uint _delay) onlySecurityGuard 
     it('Should delay payment for a specified number of seconds', async () => {
         const nameHash = web3.sha3('dani'),
               paymentDescription = "Vault dues",
               refHash = web3.sha3('paymentSharedWithContract'),
               paymentAmount = wei("30"),
-              paymentDelay = days(1)
+              paymentDelay = hours(1)
 
         await vault.authorizeSpender(spender, "dani", nameHash)
         await vault.authorizePayment(
@@ -167,22 +171,13 @@ contract('Vault', accounts => {
             {from: spender}
         )
 
-        let { 3: earliestPayTime } = await vault.authorizedPayments.call(0)
-        const { timestamp: prevBlockMined } = await web3.eth.getBlock("latest")
-        
         await vault.delayPayment(paymentID, days(1), {from: securityGuard})
-        
-        let { 
-            3: newEarliestPayTime
-        } = await vault.authorizedPayments.call(0)
         // initial delay is 2 days
         await timeTravel(days(2) + hours(1))
-        // now we're after the initial delay but before the new delay
-        const { timestamp: now } = await web3.eth.getBlock("latest")
 
-        try{
+        try {
             await vault.collectAuthorizedPayment(paymentID, { from: recipient })
-        }catch(err){
+        } catch(err) {
             return assertJump(err)
         }
         return assert.fail("Test has failed")
@@ -225,6 +220,8 @@ contract('Vault', accounts => {
 
     })
 
+    // Cancel a payment all together
+    // function cancelPayment(uint _idPayment) onlyOwner
     it('Should cancel a payment that has been authorized ', async () => {
         const nameHash = web3.sha3('larry'),
               paymentDescription = "Thanks for all the fish!",
@@ -251,6 +248,34 @@ contract('Vault', accounts => {
         assert.isTrue(cancelled)
     })
 
+    it('Should throw when cancelling a payment that has already been cancelled.', async () => {
+        const nameHash = web3.sha3('larry'),
+              paymentDescription = "Thanks for all the fish!",
+              refHash = web3.sha3('paymentSharedWithContract'),
+              paymentAmount = wei("10000"),
+              paymentDelay = days(2),
+              paymentID = 0
+
+        await vault.authorizeSpender(spender, "larry", nameHash)
+        await vault.authorizePayment(
+            paymentDescription,
+            refHash,
+            recipient,
+            paymentAmount,
+            paymentDelay,
+            {from: spender}
+        )
+
+        await vault.cancelPayment(0)
+        
+        try{
+            await vault.cancelPayment(0)
+        } catch(err) {
+            return assertJump(err)
+        }
+        assert.fail('Test has failed.')
+    })
+    //  function setTimelock(uint _newTimeLock) onlyOwner
     it('Should set a higher time lock', async () => {
         let tLock = await vault.timeLock.call()
         assert.equal(tLock, days(2))
@@ -259,6 +284,8 @@ contract('Vault', accounts => {
 
         assert.equal(tLock.toNumber(), days(2) + hours(1))
     })
+
+
 
 
     it('Should set a time lock above the absolute minimum but below the initial time lock', async () => {
@@ -282,14 +309,10 @@ contract('Vault', accounts => {
         return assert.fail('Test has failed')
     })
 
-    /// @notice `onlyOwner` Changes the maximum number of seconds
+    /// Changes the maximum number of seconds
     /// `securityGuard` can delay a payment
-    /// @param _maxSecurityGuardDelay The new maximum delay in seconds that
-    ///  `securityGuard` can delay the payment's execution in total
 
-    // function setMaxSecurityGuardDelay(uint _maxSecurityGuardDelay) onlyOwner {
-    //     maxSecurityGuardDelay = _maxSecurityGuardDelay
-    // }
+    // function setMaxSecurityGuardDelay(uint _maxSecurityGuardDelay) onlyOwner
     it('Should change the maximum time the security guard is allowed to delay a payment', async () => {
         const nameHash = web3.sha3('larry'),
               paymentDescription = "Thanks for all the fish!",
@@ -309,12 +332,15 @@ contract('Vault', accounts => {
         )
         let SG_DELAY = await vault.maxSecurityGuardDelay.call()
         assert.equal(SG_DELAY, days(3))
-        await vault.setMaxSecurityGuardDelay(0)
 
+        await vault.setMaxSecurityGuardDelay(0)
         SG_DELAY = await vault.maxSecurityGuardDelay.call()
         assert.equal(SG_DELAY, 0)
 
-        await vault.setMaxSecurityGuardDelay(days(3))
+        await vault.setMaxSecurityGuardDelay(days(10))
+        SG_DELAY = await vault.maxSecurityGuardDelay.call()
+        assert.equal(SG_DELAY, days(10))
+
     })
 
     it('Should throw on non-owner address setting Maximum Security Guard Delay permission', async () => { 
