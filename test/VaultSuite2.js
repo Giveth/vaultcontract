@@ -4,7 +4,7 @@
 /* global assert */
 
 const assertJump = require('./helpers/assertJump.js')
-const timer = require('./helpers/timer.js')
+const timeTravel = require('./helpers/timeTravel.js')
 
 const Vault = artifacts.require('../contracts/Vault.sol')
 
@@ -363,8 +363,4 @@ function hours(hours) {
 }
 function wei(wei/*:string*/) {
     return web3.toBigNumber(wei)
-}
-
-function timeTravel(time) {
-    return timer(time)
 }

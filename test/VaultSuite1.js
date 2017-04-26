@@ -6,7 +6,7 @@
 /* global assert */
 
 const assertJump = require("./helpers/assertJump.js");
-const timer = require("./helpers/timer.js");
+const timeTravel = require("./helpers/timeTravel.js");
 
 const Vault = artifacts.require("../contracts/Vault.sol");
 
@@ -176,7 +176,7 @@ contract("Vault::Receive,Authorize,Unauthorize,Collect", (accounts) => {
         );
 
         await vault.unauthorizeSpender(spender, { from: owner });
-        await timer((86400 * 2) + 1);
+        await timeTravel((86400 * 2) + 1);
 
         try {
             await vault.collectAuthorizedPayment(0, { from: recipient });
@@ -202,7 +202,7 @@ contract("Vault::Receive,Authorize,Unauthorize,Collect", (accounts) => {
             86400 * 2,
             { from: spender },
         );
-        await timer((86400 * 2) + 1);
+        await timeTravel((86400 * 2) + 1);
 
         const balance = web3.eth.getBalance(recipient);
         const result = await vault.collectAuthorizedPayment(0, { from: recipient });
@@ -231,7 +231,7 @@ contract("Vault::Receive,Authorize,Unauthorize,Collect", (accounts) => {
             86400 * 2,
             { from: spender },
         );
-        await timer((86400 * 2) + 1);
+        await timeTravel((86400 * 2) + 1);
 
         web3.eth.getBalance(recipient);
         await vault.collectAuthorizedPayment(0, { from: recipient });
