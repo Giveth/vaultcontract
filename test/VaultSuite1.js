@@ -20,9 +20,8 @@ contract("Vault::Receive,Authorize,Unauthorize,Collect", (accounts) => {
         2: escapeHatchDestination,
         3: securityGuard,
         4: spender,
-        5: recipient
-    } = accounts
-
+        5: recipient,
+    } = accounts;
 
     let vault;
 
@@ -71,7 +70,7 @@ contract("Vault::Receive,Authorize,Unauthorize,Collect", (accounts) => {
         await vault.authorizeSpender(spender, "Spender1", spender1Sha3, {
             from: owner,
         });
-        const [name, nameHash, idx] = await vault.spenders(spender);
+        const [ name, nameHash, idx ] = await vault.spenders(spender);
         assert.equal(name, "Spender1");
         assert.equal(nameHash, spender1Sha3);
         assert.equal(idx, "1");
