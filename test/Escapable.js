@@ -4,6 +4,7 @@
 /* global assert */
 
 const assertJump = require("./helpers/assertJump.js");
+const filterCoverageTopics = require("./helpers/filterCoverageTopics.js");
 
 const Escapable = artifacts.require("../contracts/Escapable.sol");
 const TestStandardToken = artifacts.require(
@@ -23,14 +24,6 @@ contract("Escapable", (accounts) => {
     let escapableEth;
     let standardToken;
     let escapableToken;
-
-    const filterCoverageTopics = logs =>
-    logs.filter(
-      log =>
-        !log.event.startsWith("__") &&
-        log.event !== "Transfer" &&
-        log.event !== "Approval",
-    );
 
     beforeEach(async () => {
         escapableEth = await Escapable.new(

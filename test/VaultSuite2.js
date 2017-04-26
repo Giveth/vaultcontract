@@ -5,6 +5,9 @@
 
 const assertJump = require('./helpers/assertJump.js')
 const timeTravel = require('./helpers/timeTravel.js')
+const days = require('./helpers/days.js')
+const hours = require('./helpers/hours.js')
+const wei = require('./helpers/wei.js')
 
 const Vault = artifacts.require('../contracts/Vault.sol')
 
@@ -354,13 +357,3 @@ contract('Vault', accounts => {
     })
 
 })
-
-function days(days) {
-    return 86400 * days
-}
-function hours(hours) {
-    return 3600 * hours
-}
-function wei(wei/*:string*/) {
-    return web3.toBigNumber(wei)
-}
