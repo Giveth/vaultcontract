@@ -30,6 +30,7 @@
   },
   "homepage": "https://github.com/Giveth/vaultcontract",
   "devDependencies": {
+    "babel-eslint": "^6.1.2",
     "babel-polyfill": "^6.23.0",
     "babel-preset-es2015": "^6.18.0",
     "babel-preset-stage-2": "^6.18.0",
@@ -37,19 +38,23 @@
     "babel-register": "^6.23.0",
     "codecov": "^2.1.0",
     "eslint": "^3.19.0",
+    "eslint-config-airbnb": "^14.1.0",
     "eslint-config-standard": "^10.2.1",
     "eslint-plugin-import": "^2.2.0",
+    "eslint-plugin-jsx-a11y": "^4.0.0",
     "eslint-plugin-mocha": "^4.8.0",
     "eslint-plugin-node": "^4.2.2",
     "eslint-plugin-promise": "^3.5.0",
-    "eslint-plugin-standard": "^3.0.1"
+    "eslint-plugin-react": "^6.10.3",
+    "eslint-plugin-standard": "^3.0.1",
+    "truffle": "^3.2.1"
   },
   "scripts": {
     "test": "truffle test",
-    "cover": "npm run fulltest && open ./solcover/coverage/lcov-report/index.html",
-    "fulltest": "npm install && npm run solcover && cd solcover && node ./runCoveredTests.js && eslint --fix test",
-    "solcover": "git clone http://github.com/adriamb/solcover.git && cd solcover && git checkout 4e22facad7cfe2be5545cfcbdee16094678e9601 && npm install",
-    "deps": "npm install --save-dev truffle@3.2.1 eslint@3.19.0 babel-eslint@6 eslint-plugin-import eslint-plugin-react eslint-config-airbnb eslint-plugin-jsx-a11y ",
-    "travis": "npm run deps && npm run fulltest && ./node_modules/.bin/codecov"
+    "cover": "cd solcover && node ./runCoveredTests.js && open ./coverage/lcov-report/index.html",
+    "travistest": "cd solcover && node ./runCoveredTests.js && cd .. && eslint test",
+    "solcoverinstall": "git clone http://github.com/adriamb/solcover.git && cd solcover && git checkout 4e22facad7cfe2be5545cfcbdee16094678e9601 && npm install",
+    "travis": "npm run installdeps && npm run travistest && ./node_modules/.bin/codecov",
+    "installdeps" : "npm install && git clone http://github.com/adriamb/solcover.git && cd solcover && git checkout 4e22facad7cfe2be5545cfcbdee16094678e9601 && npm install"
   }
 }
