@@ -6,7 +6,7 @@
 /* global assert */
 
 const assertJump = require("./helpers/assertJump.js");
-const timer = require("./helpers/timer.js");
+const timeTravel = require("./helpers/timeTravel.js");
 
 const Vault = artifacts.require("../contracts/Vault.sol");
 
@@ -20,9 +20,8 @@ contract("Vault::Receive,Authorize,Unauthorize,Collect", (accounts) => {
         2: escapeHatchDestination,
         3: securityGuard,
         4: spender,
-        5: recipient
-    } = accounts
-
+        5: recipient,
+    } = accounts;
 
     let vault;
 
@@ -71,7 +70,7 @@ contract("Vault::Receive,Authorize,Unauthorize,Collect", (accounts) => {
         await vault.authorizeSpender(spender, "Spender1", spender1Sha3, {
             from: owner,
         });
-        const [name, nameHash, idx] = await vault.spenders(spender);
+        const [ name, nameHash, idx ] = await vault.spenders(spender);
         assert.equal(name, "Spender1");
         assert.equal(nameHash, spender1Sha3);
         assert.equal(idx, "1");
@@ -176,7 +175,7 @@ contract("Vault::Receive,Authorize,Unauthorize,Collect", (accounts) => {
         );
 
         await vault.unauthorizeSpender(spender, { from: owner });
-        await timer((86400 * 2) + 1);
+        await timeTravel((86400 * 2) + 1);
 
         try {
             await vault.collectAuthorizedPayment(0, { from: recipient });
@@ -202,7 +201,7 @@ contract("Vault::Receive,Authorize,Unauthorize,Collect", (accounts) => {
             86400 * 2,
             { from: spender },
         );
-        await timer((86400 * 2) + 1);
+        await timeTravel((86400 * 2) + 1);
 
         const balance = web3.eth.getBalance(recipient);
         const result = await vault.collectAuthorizedPayment(0, { from: recipient });
@@ -231,7 +230,7 @@ contract("Vault::Receive,Authorize,Unauthorize,Collect", (accounts) => {
             86400 * 2,
             { from: spender },
         );
-        await timer((86400 * 2) + 1);
+        await timeTravel((86400 * 2) + 1);
 
         web3.eth.getBalance(recipient);
         await vault.collectAuthorizedPayment(0, { from: recipient });
