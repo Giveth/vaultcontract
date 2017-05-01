@@ -28,11 +28,11 @@ pragma solidity ^0.4.6;
 import "./Owned.sol";
 import "./Token.sol";
 import "./Escapable.sol";
-
+import "./SafeMath.sol";
 
 /// @dev `Vault` is a higher level contract built off of the `Escapable`
 ///  contract that holds funds for Campaigns and automates payments.
-contract Vault is Escapable, Owned {
+contract Vault is Escapable, Owned, SafeMath {
 
     /// @dev `Payment` is a public structure that describes the details of
     ///  each payment making it easy to track the movement of funds
@@ -145,7 +145,7 @@ contract Vault is Escapable, Owned {
         spenders[_spender].name = _name;
         spenders[_spender].reference = _reference;
 
-        spenderAddresses.length++;
+        spenderAddresses.length = add(spenderAddresses.length, 1);
         spenders[_spender].idx = spenderAddresses.length;
         spenderAddresses[spenderAddresses.length - 1] = _spender;
         SpenderAuthorized(_spender);
@@ -161,7 +161,7 @@ contract Vault is Escapable, Owned {
 
         lastSpender.idx = deletedSpender.idx;
         spenderAddresses[lastSpender.idx -1] = spenderAddresses[spenderAddresses.length -1];
-        spenderAddresses.length --;
+        spenderAddresses.length = subtract(spenderAddresses.length, 1);
 
         deletedSpender.name = "";
         deletedSpender.reference = 0x0;
@@ -214,7 +214,7 @@ contract Vault is Escapable, Owned {
         if (spender.idx == 0) throw;
 
         uint idPayment = authorizedPayments.length;       // Unique Payment ID
-        authorizedPayments.length++;
+        authorizedPayments.length = add(authorizedPayments.length, 1);
 
         // The following lines fill out the payment struct
         Payment p = authorizedPayments[idPayment];
@@ -224,9 +224,9 @@ contract Vault is Escapable, Owned {
 
         // Determines the earliest the recipient can receive payment (Unix time)
         if (_paymentDelay >= timeLock) {
-            p.earliestPayTime = now + _paymentDelay;
+            p.earliestPayTime = add(now, _paymentDelay);
         } else {
-            p.earliestPayTime = now + timeLock;
+            p.earliestPayTime = add(now, timeLock);
         }
 
         p.recipient = _recipient;
@@ -234,15 +234,15 @@ contract Vault is Escapable, Owned {
         p.name = _name;
         p.reference = _reference;
 
-        totalAuthorizedToBeSpent += p.amount;
+        totalAuthorizedToBeSpent = add(totalAuthorizedToBeSpent, p.amount);
         PaymentAuthorized(idPayment, p.recipient, p.amount);
 
         if ((now >= p.earliestPayTime) && (getBalance() >= p.amount)) {
             p.paid = true;                      // Set the payment to being paid
             transfer(p.recipient, p.amount);    // Make the payment
 
-            totalAuthorizedToBeSpent -= p.amount;
-            totalSpent += p.amount;         // Accounting
+            totalAuthorizedToBeSpent = subtract(totalAuthorizedToBeSpent, p.amount);
+            totalSpent = add(totalSpent, p.amount);         // Accounting
             PaymentExecuted(idPayment, p.recipient, p.amount);
         }
         return idPayment;
@@ -273,8 +273,8 @@ contract Vault is Escapable, Owned {
         p.paid = true; // Set the payment to being paid
         transfer(p.recipient, p.amount);// Make the payment
 
-        totalAuthorizedToBeSpent -= p.amount;
-        totalSpent += p.amount;
+        totalAuthorizedToBeSpent = subtract(totalAuthorizedToBeSpent, p.amount);
+        totalSpent = add(totalSpent, p.amount);
         PaymentExecuted(_idPayment, p.recipient, p.amount);
      }
 
@@ -294,13 +294,13 @@ contract Vault is Escapable, Owned {
 
         Payment p = authorizedPayments[_idPayment];
 
-        if ((p.securityGuardDelay + _delay > maxSecurityGuardDelay) ||
+        if ((add(p.securityGuardDelay, _delay) > maxSecurityGuardDelay) ||
             (p.paid) ||
             (p.canceled))
             throw;
 
-        p.securityGuardDelay += _delay;
-        p.earliestPayTime += _delay;
+        p.securityGuardDelay = add(p.securityGuardDelay, _delay);
+        p.earliestPayTime  = add(p.earliestPayTime, _delay);
         PaymentDelayed(p.earliestPayTime);
     }
 
@@ -318,7 +318,7 @@ contract Vault is Escapable, Owned {
         if (p.canceled) throw;
         if (p.paid) throw;
 
-        totalAuthorizedToBeSpent -= p.amount;
+        totalAuthorizedToBeSpent = subtract(totalAuthorizedToBeSpent, p.amount);
 
         p.canceled = true;
         PaymentCanceled(_idPayment);
