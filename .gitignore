@@ -1,2 +1,4 @@
-node_modules/
-*.log
+build
+node_modules
+solcover
+
