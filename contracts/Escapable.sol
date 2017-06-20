@@ -92,11 +92,34 @@ contract Escapable {
         EtherReceived(msg.sender, msg.value);
     }
 
+//////////
+// Safety Methods
+//////////
+
+    /// @notice This method can be used by the controller to extract mistakenly
+    ///  sent tokens to this contract.
+    /// @param _token The address of the token contract that you want to recover
+    ///  set to 0 in case you want to extract ether.
+    function claimTokens(address _token) public onlyEscapeHatchCaller {
+        if (_token == 0x0) {
+            escapeHatchDestination.transfer(this.balance);
+            return;
+        }
+
+        Token token = Token(_token);
+        uint256 balance = token.balanceOf(this);
+        token.transfer(escapeHatchDestination, balance);
+        ClaimedTokens(_token, escapeHatchDestination, balance);
+    }
+
+
     /// @notice The fall back function is called whenever ether is sent to this
     ///  contract
     function () payable {
         receiveEther();
     }
+
+    event ClaimedTokens(address indexed _token, address indexed _controller, uint256 _amount);
     event EscapeHatchCalled(uint amount);
     event EscapeHatchCallerChanged(address indexed newEscapeHatchCaller);
     event EtherReceived(address indexed from, uint amount);
