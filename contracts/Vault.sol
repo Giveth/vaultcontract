@@ -40,6 +40,7 @@ contract Vault is Escapable, Owned {
     struct Payment {
         string name;     // What is the purpose of this payment
         bytes32 reference;  // Reference of the payment.
+        address token;        // if 0 payment of ether, else the token being sent
         address spender;        // Who is sending the funds
         uint earliestPayTime;   // The earliest a payment can be made (Unix Time)
         bool canceled;         // If True then the payment has been canceled
@@ -196,6 +197,7 @@ contract Vault is Escapable, Owned {
     /// @param _name Brief description of the payment that is authorized
     /// @param _reference Reference hash of the payment shared with the contract
     ///  requesting the payment.
+    /// @param _token The token being sent
     /// @param _recipient Destination of the payment
     /// @param _amount Amount to be paid in wei
     /// @param _paymentDelay Number of seconds the payment is to be delayed, if
@@ -204,6 +206,7 @@ contract Vault is Escapable, Owned {
     function authorizePayment(
         string _name,
         bytes32 _reference,
+        address _token,
         address _recipient,
         uint _amount,
         uint _paymentDelay
@@ -233,13 +236,14 @@ contract Vault is Escapable, Owned {
         p.amount = _amount;
         p.name = _name;
         p.reference = _reference;
+        p.token = (_token == 0) ? baseToken : _token;
 
         totalAuthorizedToBeSpent += p.amount;
         PaymentAuthorized(idPayment, p.recipient, p.amount);
 
         if ((now >= p.earliestPayTime) && (getBalance() >= p.amount)) {
             p.paid = true;                      // Set the payment to being paid
-            transfer(p.recipient, p.amount);    // Make the payment
+            transfer(p.token, p.recipient, p.amount);    // Make the payment
 
             totalAuthorizedToBeSpent -= p.amount;
             totalSpent += p.amount;         // Accounting
@@ -271,7 +275,7 @@ contract Vault is Escapable, Owned {
         if (getBalance() < p.amount) throw;
 
         p.paid = true; // Set the payment to being paid
-        transfer(p.recipient, p.amount);// Make the payment
+        transfer(p.token, p.recipient, p.amount);// Make the payment
 
         totalAuthorizedToBeSpent -= p.amount;
         totalSpent += p.amount;
