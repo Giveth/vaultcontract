@@ -46,7 +46,7 @@ contract Escapable {
     function escapeHatch() onlyEscapeHatchCaller {
         uint total = getBalance();
         // Send the total balance of this contract to the `escapeHatchDestination`
-        transfer(escapeHatchDestination, total);
+        transfer(baseToken, escapeHatchDestination, total);
         EscapeHatchCalled(total);
     }
     /// @notice Changes the address assigned to call `escapeHatch()`
@@ -67,13 +67,14 @@ contract Escapable {
             return this.balance;
         }
     }
-    /// @notice Sends an `_amount` of `baseToken` to `_to` from this contract,
+    /// @notice Sends an `_amount` of `_token` to `_to` from this contract,
     /// and it can only be called by the contract itself
+    /// @param _token to deposit, 0x0 to send ether.
     /// @param _to The address of the recipient
     /// @param _amount The amount of `baseToken to be sent
-    function transfer(address _to, uint _amount) internal {
-        if (address(baseToken) != 0) {
-            if (!baseToken.transfer(_to, _amount)) throw;
+    function transfer(address _token, address _to, uint _amount) internal {
+        if (_token != 0) {
+            if (!Token(_token).transfer(_to, _amount)) throw;
         } else {
             if (! _to.send(_amount)) throw;
         }
