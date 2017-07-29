@@ -1,6 +1,6 @@
 {
   "name": "vaultcontract",
-  "version": "0.2.19",
+  "version": "0.2.20",
   "description": "Vault contract. Implementation of a safe timelock in solidity",
   "main": "dist/vault.js",
   "directories": {
@@ -49,7 +49,7 @@
     "eslint-plugin-import": "^2.2.0",
     "eslint-plugin-jsx-a11y": "^3.0.2",
     "eslint-plugin-react": "^6.9.0",
-    "ethconnector": "^0.0.22",
+    "ethconnector": "^0.0.24",
     "rimraf": "^2.5.4"
   }
 }
