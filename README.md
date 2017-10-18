@@ -1,4 +1,4 @@
-# Vault
+![Vault](readme-header.png)
 
 This contract is designed to hold ether safely and automate payments to a pre-approved white list of recipients. While this contract is still being tested ether will generally come straight from a trusted Multisig as a safety precaution, but once fully tested and optimized this contract will be a safe place to store funds equipped with optional variable time delays to allow for an optional escape hatch to be utilized if necessary.
 
