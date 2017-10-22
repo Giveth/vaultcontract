@@ -33,7 +33,7 @@ In the constructor of the Vault, you assign:
 
 ### Loading the Vault with Ether
 
-This version of the vault only holds ether (once tested, it will be upgraded to hold tokens as well), ether can be sent directly to the vault (effectively using the fall back fucntion) or by calling `receiveEther()`. If tokens are sent to the Vault, at this point, they will be lost. 
+This version of the vault only holds ether (once tested, it will be upgraded to hold tokens as well), ether can be sent directly to the vault (effectively using the fall back function) or by calling `receiveEther()`. If tokens are sent to the Vault, at this point, they will be lost. 
 
 ### Managing the White List of Authorized Spending Accounts
 
